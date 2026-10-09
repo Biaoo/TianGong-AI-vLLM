@@ -1,0 +1,27 @@
+{
+  "backend_name": "tiangong-nemotron-embed-custom",
+  "description": "Pinned Nemotron pooling runtime; set DP and startup memory threshold per host",
+  "health_check_path": "/health",
+  "default_version": "vllm0.25.0-custom",
+  "version_configs": {
+    "vllm0.25.0-custom": {
+      "image_name": "tiangong-embed:vllm0.25.0",
+      "custom_framework": "cuda",
+      "entrypoint": "vllm serve",
+      "run_command": "{{model_path}} --host {{worker_ip}} --port {{port}} --served-model-name {{model_name}} nv-community/Nemotron-3-Embed-8B-BF16"
+    }
+  },
+  "default_env": {
+    "GPUSTACK_MODEL_RUNTIME_SHM_SIZE_GIB": "8",
+    "HF_HUB_OFFLINE": "1",
+    "OMP_NUM_THREADS": "8"
+  },
+  "default_backend_param": [
+    "--runner=pooling",
+    "--dtype=bfloat16",
+    "--tensor-parallel-size=1",
+    "--max-model-len=32768",
+    "--max-num-batched-tokens=32768",
+    "--max-num-seqs=4"
+  ]
+}

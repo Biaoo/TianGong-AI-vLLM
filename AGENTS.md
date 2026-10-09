@@ -35,6 +35,10 @@
 
 ## 合同与验证
 
+- 可选 GPUStack worker 入口为 `deploy/gpustack/worker.sh`，与原生 Compose 生命周期互斥。Docker CE 主机使用 CDI 模板，Snap 专属镜像不用于 CE；worker 私有注册和挂载覆盖文件不提交。见 [GPUStack 托管](docs/gpustack-workers.md)。
+- Qwen 与 Nemotron 使用各自自定义后端；同机共享 GPU 的 deployment 显式选择卡数、DP/TP、启动显存检查比例和不同通信端口。网关统一负载均衡、实例动态端口；Nemotron 的 query/document 请求保留 `/v2/embed`，使用通用代理路由及独立 inference key。不能把 OpenAI embedding 路由当作所有协议的替代。
+- 切换后验证新旧向量、32768 token 不截断输入、实际后端计数与 MinerU 联合负载；记录样本范围。私有 overlay 必须保留模型只读挂载与缓存，重建 worker 后核对模型和 GPU；停止 worker 不代替停止 deployment。
+
 - Qwen API 默认端口 7730，四卡与三卡 Embed 均默认只监听本机 7731，且同一主机互斥；跨主机访问在私有 `.env` 中绑定各自局域网 IP。模型名分别以 `.env` 的 `SERVED_MODEL_NAME`、`EMBED_SERVED_MODEL_NAME` 与 `EMBED3_SERVED_MODEL_NAME` 为准。Embed 检索使用 `/v2/embed` 的 `input_type=query/document`，不同用途的输入不可混用。
 - API key 默认未配置／为空，业务请求无需鉴权；非空 `VLLM_API_KEY`、`EMBED_API_KEY` 或 `EMBED3_API_KEY` 分别为对应服务启用 Bearer 鉴权，验收脚本按配置检查对应行为；健康检查不等于可推理。不要把 Compose 展开配置或 `.env` 内容写入日志、对话、Git。
 - 发布前执行 `uv run --group dev black --check scripts tests deploy/vllm/patches`、`uv run --group dev ruff check scripts tests deploy/vllm/patches`、`uv run --group dev pytest`、`bash -n deploy/manage.sh deploy/vllm/serve.sh`、`deploy/manage.sh config model`；配置四卡或三卡 Embed 的机器还须分别执行 `deploy/manage.sh config embed` 或 `deploy/manage.sh config embed3`。
