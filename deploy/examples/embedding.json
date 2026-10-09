@@ -1,0 +1,19 @@
+{
+  "profile": "qwen3-embedding-8b",
+  "model_dir": "models/Qwen3-Embedding-8B",
+  "gpus": [
+    "0",
+    "1",
+    "2"
+  ],
+  "gpu_mode": "nvidia",
+  "host": "0.0.0.0",
+  "port": 7710,
+  "api_key_env": "EMBEDDING_API_KEY",
+  "options": {
+    "data-parallel-size": 3,
+    "tensor-parallel-size": 1,
+    "max-model-len": 40960,
+    "gpu-memory-utilization": 0.6
+  }
+}

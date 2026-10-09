@@ -1,8 +1,10 @@
-# 部署与恢复
+# Qwen3.8 生成模型部署与恢复
+
+本页保留旧 `.env` 四卡部署路径；新机器优先按[多模型管理](models.md)创建独立实例。
 
 ## 前置条件
 
-命令均在仓库根目录执行。需要 Linux、NVIDIA GPU 驱动、NVIDIA Container Toolkit、Docker Engine 28.3+ / Compose 2.24.4+ 和 Python 3.12+、curl。宿主机不安装 vLLM/Torch；uv 仅用于开发工具。
+命令均在仓库根目录执行。需要 Linux、NVIDIA GPU 驱动、NVIDIA Container Toolkit、Docker Engine 28.3+ / Compose 2.24.4+ 和 Python 3.12+。宿主机不安装 vLLM/Torch；uv 仅用于开发工具。
 
 模板使用四张 Blackwell GPU、TP=4 + EP=4。NVFP4、Qwen4Exp 架构和 FP8 PLE 混合量化均要求镜像支持，不能任意替换为老版本。模型卡要求至少包含 vLLM 提交 `d4d703caf908786416585ceb1f369e2e0363358b`；固定镜像已包含混合量化 MTP 修复，模板默认使用 MTP 3，实测依据见[性能调优](performance-tuning.md)。来源：[模型卡](https://modelscope.cn/models/nv-community/Qwen3.8-Flash-Next-NVFP4)。
 
@@ -46,15 +48,15 @@ chmod 600 .env
 ## 模型准备与启动
 
 ```bash
-./deploy/manage.sh download
 ./deploy/manage.sh pull
+./deploy/manage.sh download
 ./deploy/manage.sh config
 ./deploy/manage.sh start model
 ./deploy/manage.sh status model
 ./deploy/manage.sh logs model
 ```
 
-下载从 ModelScope 固定提交取文件，curl 支持中断续传，SHA256 验证完成后原子替换单个文件。`verify` 检查完整清单；不要在模型正在加载时修改权重。推理只读本地权重并启用离线模式，不在启动时静默换模型版本。
+下载在固定镜像的临时无 GPU 容器中进行，从 ModelScope 固定提交取文件，curl 支持中断续传，SHA256 验证完成后原子替换单个文件。`verify` 检查完整清单；不要在模型正在加载时修改权重。推理只读本地权重并启用离线模式，不在启动时静默换模型版本。
 
 `pull` 会拉取固定基础镜像并构建修复层；也可使用 `build` 复用本地基础镜像。首次加载、编译可能需较长时间。`logs` 为持续跟踪，Ctrl-C 只退出日志查看。健康后执行：
 
@@ -74,7 +76,7 @@ chmod 600 .env
 
 `restart: unless-stopped` 配合已启用的 Docker 系统服务完成机器重启恢复，无需 PM2。主动 stop 的容器保持停止。不要使用全局 Docker 清理或重启共享 daemon。
 
-旧原生部署迁移时先识别 PM2 名称及进程树，确认请求排空后删除对应记录、保存 PM2 列表，再删除明确归属的旧模型与环境。不要按“Qwen”字符串批量删除其他项目的 embedding 服务或共享缓存。
+旧原生部署迁移时先识别 PM2 名称及进程树，确认请求排空后停止对应进程；新 Docker 服务真实验收通过后再移除该 PM2 记录并保存列表，保留回滚所需旧模型与环境。不要按“Qwen”字符串批量删除其他项目的 embedding 服务或共享缓存。
 
 ## 故障排查
 
@@ -88,3 +90,7 @@ chmod 600 .env
 - `/health` 正常但首请求挂起：检查 worker、编译和模型加载日志，必须以真实请求返回验收。
 
 升级前记录当前镜像摘要、模型清单和配置；保留仍需回退的镜像。回退只恢复已知兼容组合，不覆盖正在使用的模型文件。
+
+## Embedding 独立部署
+
+Qwen3-Embedding-8B 使用独立模型配置和机器实例，可选择不同 GPU 数量、上下文和并行策略。使用 `deploy/manage.sh <action> embedding`，完整配置和原生服务迁移步骤见 [Embedding 部署](embedding.md)。本页默认的 model 命令用于四卡生成模型。

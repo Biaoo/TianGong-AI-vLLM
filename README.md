@@ -1,72 +1,71 @@
 # TianGong AI vLLM Serve
 
-## 直接复制给 AI：启动、恢复、停止
+通过 Docker 下载、校验和运行多个模型，支持 vLLM 推理与 Laya 专用 SDK。同一个模型可在不同机器或同一机器上创建多个独立实例；GPU 数量、TP/DP/PP、上下文长度、显存预算、端口和模型目录按实例配置。
 
-在部署机器打开本仓库作为工作区，复制以下任一段。凭证从本地配置读取，无需粘贴到对话。
+- `deploy/profiles/`：可复用模型配置，固定镜像、权重清单、默认参数和验收脚本。
+- `deploy/examples/`：机器实例模板，包含单卡、三卡 embedding 与四卡生成模型示例。
+- `deployments/<实例名>.json`：本机私有实例配置，不纳入 Git。
+- `deploy/manage.sh`：统一管理入口；每个实例拥有独立容器、网络和缓存卷。
 
-**首次初始化并启动：**
-
-```text
-请初始化并启动当前工作区的 TianGong AI vLLM Serve。先读 AGENTS.md、README.md 和 docs/deployment.md，检查本项目容器、端口、GPU、模型缓存和私有配置。复用已有配置；缺失时按 .env.example 初始化，默认不启用 API key；仅在配置明确要求鉴权时填写 key，不输出密钥。模型仅用 Docker 运行，按固定清单下载并校验，检查容器 CUDA。通过 deploy/manage.sh start model 启动并等候健康，执行 deploy/manage.sh check 完成真实推理验收。报告服务地址、模型名、验收结果及未解决问题，不操作其他项目服务。
-```
-
-**恢复或排障：**
-
-```text
-请恢复当前工作区的模型服务。先读 AGENTS.md 和 docs/deployment.md，检查本项目 Compose 状态、GPU、容器日志、端口和实际请求，定位原因。复用模型与私有配置，start 只补起缺失服务；配置变更才 restart。不要重启共享 Docker daemon、清空全局缓存或恢复其他项目 PM2 进程。修复后执行真实验收，不只检查 /health。报告原因、修复和仍存在的限制，不输出密钥。
-```
-
-**安全停止：**
-
-```text
-请停止当前工作区的模型设施。确认本项目容器归属，停止新增请求，检查 /metrics 中 running/waiting 请求并等待收敛。执行 deploy/manage.sh stop all，确认容器退出和对应 GPU 显存释放。保留模型、私有配置、编译缓存和验收结果，不清理其他服务。说明下次 start model 的恢复方式。
-```
-
-通过 Docker 提供 Qwen3.8-Flash-Next-NVFP4 的 OpenAI-compatible 文本、图片和工具调用 API。默认四卡 TP4 + EP4、GPU PLE、自动调优开启、MTP 3；性能对照见[调优指南](docs/performance-tuning.md)。模型来自指定的 [ModelScope 仓库](https://modelscope.cn/models/nv-community/Qwen3.8-Flash-Next-NVFP4)，修订与文件摘要固定在清单中。
-
-## 启动与调用
-
-前提：Linux、可用的 NVIDIA 驱动和 Container Toolkit、Docker Compose、Python 3.12+、curl；模板为四卡部署。准备约 133 GB 模型空间，另外预留镜像和缓存空间。详细兼容条件见[部署说明](docs/deployment.md)。
+## 本机 Embedding
 
 ```bash
-cp -n .env.example .env
-# 编辑 .env，核对 GPU 和镜像；VLLM_API_KEY 默认留空
-./deploy/manage.sh download
-./deploy/manage.sh pull
-./deploy/manage.sh start model
-./deploy/manage.sh status model
-./deploy/manage.sh check
+./deploy/manage.sh init embedding embedding
+# 编辑 deployments/embedding.json：GPU、模型目录、端口、并行方式等
+./deploy/manage.sh pull embedding
+./deploy/manage.sh download embedding  # 复用缓存时可改用 verify
+./deploy/manage.sh start embedding
+./deploy/manage.sh check embedding
 ```
 
-默认地址 `http://127.0.0.1:7730/v1`，模型名 `nv-community/Qwen3.8-Flash-Next-NVFP4`。默认无需 API key 或 Authorization 请求头。可在 `.env` 中设置非空 `VLLM_API_KEY` 并重启模型启用 Bearer 鉴权。`check` 根据配置验证对应模式并保存真实响应，不输出凭证。外部客户端使用部署机器地址。
+默认模型名 `Qwen/Qwen3-Embedding-8B`，地址 `http://127.0.0.1:7710/v1`，输出 4096 维向量。详细说明见 [Embedding 部署](docs/embedding.md)。可用 `init embedding-single <实例名>` 创建另一台机器的单卡配置，再按实际显存调整参数。
 
-| 入口 | 用途 |
-| --- | --- |
-| `deploy/manage.sh start/restart/stop/status/logs model` | 模型生命周期 |
-| `deploy/manage.sh check` | 鉴权、文本、流式、工具、图片、推理验收 |
-| `deploy/manage.sh verify` | 检查全部模型文件 SHA256 |
-| `examples/chat.http` | Chat、流式和工具调用示例 |
+## Laya 多语言决策
 
-重复 start 保留已有容器；修改配置用 restart。Docker 自动恢复由 `unless-stopped` 管理；主动 stop 的服务不会在重启机器时自行恢复。
+Laya 按每卡一个完整模型副本运行，统一入口默认 `http://127.0.0.1:7720/v1/decisions`。`deploy/manage.sh <action> laya` 管理整个实例，单卡到三卡只需调整机器配置的 gpus 并重启。详见 [Laya 部署与调用](docs/laya.md)。
+
+## 多模型与跨机器
+
+```bash
+./deploy/manage.sh profiles
+./deploy/manage.sh list
+./deploy/manage.sh init model chat-main
+# 配置 deployments/chat-main.json 后，下载和启动该实例
+./deploy/manage.sh pull chat-main
+./deploy/manage.sh download chat-main
+./deploy/manage.sh start chat-main
+./deploy/manage.sh status all
+./deploy/manage.sh stop embedding
+```
+
+`start` 保留已有容器；修改配置用 `restart`；已离线导入镜像用 `start-loaded` / `restart-loaded`。`all` 仅包含本机 `deployments/` 中明确配置的实例。启动多个实例前检查端口和共享 GPU 显存预算。Docker `unless-stopped` 管理退出恢复，主动停止的实例不会在重启时自行恢复。
+
+已有四卡 Qwen3.8 部署仍可通过 `.env` 与 `manage.sh <action> model` 管理，保留原 Compose 身份；新部署优先使用实例文件。迁移为实例文件时须按[多模型管理](docs/models.md)保留原项目名称。`.env` 可保存实例通过 `api_key_env` 引用的密钥；默认不启用鉴权。
+
+## 可选 GPUStack 试用
+
+需要统一模型入口、跨主机副本管理与负载均衡时，可使用独立的 `bash deploy/gpustack/manage.sh`。先执行 `init`、`config`，再显式 `pull`、`start`；默认只启动本机控制面，不分配 GPU 或迁移现有模型。现有接口代理与 GPUStack 原生托管分阶段验证，详见 [GPUStack 试用](docs/gpustack.md)。
 
 ## 文档与开发
 
 | 文档 | 内容 |
 | --- | --- |
-| [部署与恢复](docs/deployment.md) | 配置、下载、启动、停止、故障恢复 |
-| [跨机迁移](docs/host-migration.md) | Git 更新、局域网复制模型/镜像、校验、切换与回滚 |
-| [架构](docs/architecture.md) | 模型服务边界、目录和生命周期 |
-| [AI 接入](docs/ai-integration.md) | API、鉴权、模型名、推理和多轮限制 |
-| [调优](docs/performance-tuning.md) | 上下文、并发、GPU 和验证边界 |
-| [依赖](docs/dependencies.md) | 容器版本、轻量 Python 锁文件和升级 |
-| [运行时修复](docs/runtime-patches.md) | 自动调优缓存根因、容器补丁和回归 |
+| [多模型与机器实例](docs/models.md) | 新模型注册、机器配置、参数覆盖、生命周期 |
+| [Embedding 部署](docs/embedding.md) | PM2 迁移、兼容性验收、调用示例与回滚 |
+| [生成模型部署](docs/deployment.md) | Qwen3.8 的资源要求与旧 `.env` 部署 |
+| [跨机迁移](docs/host-migration.md) | 离线镜像和模型迁移 |
+| [架构](docs/architecture.md) | 模型配置、机器实例与 Docker 边界 |
+| [依赖](docs/dependencies.md) | 镜像和开发工具版本、升级方法 |
 | [验证](docs/validation.md) | 本地回归、真实验收与证据 |
+| [调优](docs/performance-tuning.md) / [运行时修复](docs/runtime-patches.md) | Qwen3.8 优化与镜像补丁 |
+| [生成模型 API](docs/ai-integration.md) | Chat、图片和工具调用 |
 
 ```bash
+export UV_PROJECT_ENVIRONMENT=.venv-dev
 uv sync --locked --group dev
-uv run --group dev black --check scripts tests deploy/vllm/patches
-uv run --group dev ruff check scripts tests deploy/vllm/patches
+uv run --group dev black --check scripts tests deploy/vllm/patches deploy/laya
+uv run --group dev ruff check scripts tests deploy/vllm/patches deploy/laya
 uv run --group dev pytest
 ```
 
-宿主开发环境只安装格式化、检查和测试工具；运维脚本仅依赖 Python 标准库与 curl。旧原生 vLLM 启动配置已退出当前部署，历史内容通过 Git 查看。
+推理库只安装在镜像内；宿主运维脚本仅依赖 Python 标准库与 curl。原生迁移期间保留旧 `.venv` 供回退，不再用于常规启动。

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 import fcntl
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 from urllib.parse import quote
@@ -17,12 +19,15 @@ ROOT = Path(__file__).resolve().parents[1]
 def read_env() -> dict[str, str]:
     path = ROOT / ".env"
     if not path.exists():
-        return {}
+        return dict(os.environ)
     return {
-        key.strip(): value.strip().strip("\"'")
-        for line in path.read_text().splitlines()
-        if line.strip() and not line.lstrip().startswith("#") and "=" in line
-        for key, value in [line.split("=", 1)]
+        **{
+            key.strip(): value.strip().strip("\"'")
+            for line in path.read_text().splitlines()
+            if line.strip() and not line.lstrip().startswith("#") and "=" in line
+            for key, value in [line.split("=", 1)]
+        },
+        **os.environ,
     }
 
 
@@ -84,12 +89,23 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--group", choices=("model", "embedding"), default="model")
+    parser.add_argument("--directory", type=Path)
+    parser.add_argument("--manifest", type=Path)
     args = parser.parse_args()
-    directory = ROOT / read_env().get("MODEL_DIR", "models/Qwen3.8-Flash-Next-NVFP4")
-    directory.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads((ROOT / "deploy/vllm/model-manifest.json").read_text())
-    with (directory / ".download.lock").open("w") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    embedding = args.group == "embedding"
+    directory = args.directory or ROOT / read_env().get(
+        "EMBEDDING_MODEL_DIR" if embedding else "MODEL_DIR",
+        "models/Qwen3-Embedding-8B" if embedding else "models/Qwen3.8-Flash-Next-NVFP4",
+    )
+    if not args.verify_only:
+        directory.mkdir(parents=True, exist_ok=True)
+    manifest_path = f"deploy/{'embedding' if embedding else 'vllm'}/model-manifest.json"
+    manifest = json.loads((args.manifest or ROOT / manifest_path).read_text())
+    lock_context = nullcontext() if args.verify_only else (directory / ".download.lock").open("w")
+    with lock_context as lock:
+        if lock is not None:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
             list(
                 pool.map(

@@ -1,0 +1,5 @@
+{
+  "version": "v2.2.3",
+  "image": "gpustack/gpustack:v2.2.3@sha256:55ecc762950a32641b6a4d96195c0662ef72998eaeeda31bba0e8e218d41afef",
+  "release_url": "https://github.com/gpustack/gpustack/releases/tag/v2.2.3"
+}

@@ -1,0 +1,23 @@
+# Render a private copy under .secrets/gpustack-ingress/nginx.conf.
+# Supply one inference-only key scoped to the selected model route.
+worker_processes auto;
+events { worker_connections 1024; }
+http {
+    access_log off;
+    upstream gpustack_gateway { server CONTROLLER_IP:17880; keepalive 32; }
+    server {
+        listen LAN_IP:7730;
+        client_max_body_size 64m;
+        location / {
+            proxy_pass http://gpustack_gateway/model/proxy/ROUTE_ID/;
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_set_header Authorization "Bearer INFERENCE_KEY";
+            proxy_buffering off;
+            proxy_request_buffering off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+            proxy_next_upstream off;
+        }
+    }
+}
