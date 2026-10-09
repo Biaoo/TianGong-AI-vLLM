@@ -1,13 +1,15 @@
-# VS Code REST Client: Embed defaults to localhost with no API key.
-# If EMBED_API_KEY is configured, add Authorization: Bearer <key>.
-@baseUrl = http://127.0.0.1:7731
+# GPUSTACK_EMBED_URL includes /model/proxy/<EMBED_ROUTE_ID>.
+# Configure URL and application key in private process environment.
+@baseUrl = {{$processEnv GPUSTACK_EMBED_URL}}
 @model = nv-community/Nemotron-3-Embed-8B-BF16
 
 ### Model identity
 GET {{baseUrl}}/v1/models
+Authorization: Bearer {{$processEnv GPUSTACK_API_KEY}}
 
 ### Query vector
 POST {{baseUrl}}/v2/embed
+Authorization: Bearer {{$processEnv GPUSTACK_API_KEY}}
 Content-Type: application/json
 
 {
@@ -20,6 +22,7 @@ Content-Type: application/json
 
 ### Document vectors for indexing
 POST {{baseUrl}}/v2/embed
+Authorization: Bearer {{$processEnv GPUSTACK_API_KEY}}
 Content-Type: application/json
 
 {

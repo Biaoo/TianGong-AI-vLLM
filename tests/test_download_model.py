@@ -1,7 +1,9 @@
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -72,3 +74,33 @@ def test_hash_failure_never_publishes_partial_file(tmp_path):
 def test_manifest_cannot_escape_model_directory(tmp_path):
     with pytest.raises(ValueError, match="outside"):
         download.fetch(tmp_path, {}, entry(name="../outside"), False)
+
+
+@pytest.mark.parametrize("option", ["--model", "--group"])
+def test_cli_verify_accepts_legacy_and_current_options(tmp_path, option):
+    weights = tmp_path / "weights.bin"
+    weights.write_bytes(b"model weights")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps({"model_id": "owner/model", "revision": "abc", "files": [entry()]})
+    )
+    command = [
+        sys.executable,
+        str(Path(download.__file__)),
+        option,
+        "embed",
+        "--verify-only",
+        "--directory",
+        str(tmp_path),
+        "--manifest",
+        str(manifest),
+    ]
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert "Snapshot verified: owner/model @ abc" in result.stdout
+    assert not (tmp_path / ".download.lock").exists()
+    weights.write_bytes(b"wrong weights")
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode != 0
+    assert "Missing or corrupt" in result.stderr
+    assert weights.read_bytes() == b"wrong weights"

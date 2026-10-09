@@ -1,13 +1,14 @@
-# VS Code REST Client: default requests need no API key.
-# If VLLM_API_KEY is configured, add Authorization: Bearer <key> to each request.
-@baseUrl = http://127.0.0.1:7730
-@model = nv-community/Qwen3.8-Flash-Next-NVFP4
+# VS Code REST Client: configure GPUSTACK_URL and GPUSTACK_API_KEY privately.
+@baseUrl = {{$processEnv GPUSTACK_URL}}
+@model = qwen38
 
 ### Model identity
 GET {{baseUrl}}/v1/models
+Authorization: Bearer {{$processEnv GPUSTACK_API_KEY}}
 
 ### Chat
 POST {{baseUrl}}/v1/chat/completions
+Authorization: Bearer {{$processEnv GPUSTACK_API_KEY}}
 Content-Type: application/json
 
 {
@@ -19,6 +20,7 @@ Content-Type: application/json
 
 ### Streaming
 POST {{baseUrl}}/v1/chat/completions
+Authorization: Bearer {{$processEnv GPUSTACK_API_KEY}}
 Content-Type: application/json
 
 {
@@ -31,6 +33,7 @@ Content-Type: application/json
 
 ### Tool selection (the client executes the returned call)
 POST {{baseUrl}}/v1/chat/completions
+Authorization: Bearer {{$processEnv GPUSTACK_API_KEY}}
 Content-Type: application/json
 
 {

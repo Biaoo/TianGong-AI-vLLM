@@ -2,7 +2,7 @@
 
 ## 地址与鉴权
 
-Qwen 默认 base URL 为 `http://127.0.0.1:7730/v1`，远程使用部署机器地址。模型名 `nv-community/Qwen3.8-Flash-Next-NVFP4`；以 `/v1/models` 与部署配置为准。默认无需 API key，省略 Authorization 请求头即可。仅当部署设置了非空 `VLLM_API_KEY` 时，业务请求才需要 `Authorization: Bearer <VLLM_API_KEY>`；key 从私有配置获取。
+业务使用 GPUStack 控制面的 `http://<GPUSTACK_HOST>:<PORT>/v1`，模型名 `qwen38`，请求必须携带应用专用 `Authorization: Bearer <API_KEY>`。地址与 key 从私有配置获取；不使用旧节点端口或动态实例端口。需要保留原始模型名的客户端使用主路由的 `/model/proxy/<QWEN_ROUTE_ID>/v1`，模型名为 `nv-community/Qwen3.8-Flash-Next-NVFP4`。
 
 Qwen 主要接口：`GET /v1/models`、`POST /v1/chat/completions`。使用模型原生 system/user/assistant/tool 角色，developer 指令请由客户端改为开头的 system 消息。客户端自行传入完整历史；本项目不提供额外 Responses 代理。
 
@@ -10,7 +10,7 @@ Qwen 主要接口：`GET /v1/models`、`POST /v1/chat/completions`。使用模�
 
 ```json
 {
-  "model": "nv-community/Qwen3.8-Flash-Next-NVFP4",
+  "model": "qwen38",
   "messages": [{"role": "user", "content": "用一句话解释张量并行。"}],
   "max_tokens": 256,
   "temperature": 0.2,
@@ -36,12 +36,13 @@ Qwen 主要接口：`GET /v1/models`、`POST /v1/chat/completions`。使用模�
 
 ## Nemotron Embed 向量接口
 
-Embed 是独立服务，三卡和四卡模板均默认仅在本机监听 `http://127.0.0.1:7731`；局域网调用须在私有配置中绑定所选主机的局域网 IP。模型名默认 `nv-community/Nemotron-3-Embed-8B-BF16`，以所选模板的 `EMBED_SERVED_MODEL_NAME` 或 `EMBED3_SERVED_MODEL_NAME` 和服务 `/v1/models` 为准。默认无需鉴权；仅当私有配置中对应的 `EMBED_API_KEY` 或 `EMBED3_API_KEY` 非空时，附加该服务的 Bearer key。它与 Qwen 的地址、key 和生命周期各自独立。
+Embed 使用 GPUStack 主路由 `http://<GPUSTACK_HOST>:<PORT>/model/proxy/<EMBED_ROUTE_ID>`，模型名 `nv-community/Nemotron-3-Embed-8B-BF16`，需要具有该路由权限的应用专用 Bearer key。多个节点由主路由统一分流，不在客户端配置节点端口。
 
 检索使用 `POST /v2/embed`，查询和待检索文档分别请求。`input_type` 为 `query` 或 `document`，服务按模型自带提示词处理原始文本；客户端无需再手动加 `query: ` 或 `passage: ` 前缀。示例请求：
 
 ```bash
-curl --fail-with-body http://127.0.0.1:7731/v2/embed \
+curl --fail-with-body "$GPUSTACK_EMBED_URL/v2/embed" \
+  -H "Authorization: Bearer $GPUSTACK_API_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"model":"nv-community/Nemotron-3-Embed-8B-BF16","input_type":"query","texts":["什么是张量并行？"],"embedding_types":["float"],"truncate":"END"}'
 ```

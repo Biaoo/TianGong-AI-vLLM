@@ -112,7 +112,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--group", choices=tuple(MODEL_SPECS), default="model")
+    parser.add_argument(
+        "--group", "--model", dest="group", choices=tuple(MODEL_SPECS), default="model"
+    )
     parser.add_argument("--directory", type=Path)
     parser.add_argument("--manifest", type=Path)
     args = parser.parse_args()

@@ -35,6 +35,8 @@ worker 操作、挂载与参数见 [模型托管](gpustack-workers.md)。同一�
 
 Generic Proxy 前缀为 `/model/proxy/ROUTE_ID`。调用方记录稳定主路由，不能配置 worker 的动态实例端口。节点专用路由用于诊断。更新 route 时须传目标对象列表；GET 响应的 targets 是数量，不能原样作为 PUT 的 targets。重命名 deployment 后须重建其副本，确保实际 served model 与容器名称一致。
 
+业务直接使用统一网关，不部署旧节点端口的兼容转发。客户端示例见 [AI 接入](ai-integration.md)。下载与权重校验仍可离线执行：`scripts/download_model.py --group embed --verify-only`；旧运维脚本的 `--model` 是 `--group` 的参数别名，不会启动推理服务。
+
 Qwen 保留固定镜像、262144 上下文、TP4 + EP、GPU PLE、FlashInfer 自动调优、MTP 3 和 NCCL。Nemotron 保留 BF16、pooling、32768 上下文、4096 维和 query/document 语义；Qwen3-Embedding 不能混入 Nemotron 副本池。MinerU 使用自己的固定镜像与参数，不套用 Qwen 镜像。共卡服务分别配置显存预算和通信端口，并测量联合峰值。
 
 ## 验收与维护

@@ -39,6 +39,8 @@
 
 - 正式 Compose 项目为 tiangong-gpustack，持久卷 tiangong-gpustack_data。变更名称须冷备并复制原卷，保留路由 ID、注册身份与 API key；核验后才删除旧资源。业务使用稳定主路由，节点路由仅用于诊断。
 - 旧 Nemotron embed/embed3 显式命令由 manage.sh 转发到 manage-legacy.sh，保留互斥与 32768 token 配置；它们不属于通用 all。固定权重见 deploy/embed/model-manifest.json。GPUStack 托管时不得再启动同一原生实例。
+- 下载器保留旧 --model 与新 --group 参数别名；兼容入口的 download/verify 同样使用固定清单，不恢复已退役的服务。
+- 业务接入示例使用 GPUStack 统一网关与应用专用 Bearer key，不提供旧节点端口的兼容转发模板；原生部署模板只用于显式独立部署或回退。
 
 ## 已有模型约束
 
