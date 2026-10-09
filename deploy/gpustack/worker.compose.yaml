@@ -1,0 +1,37 @@
+name: tiangong-gpustack-worker
+services:
+  worker:
+    image: gpustack/gpustack:v2.2.3@sha256:55ecc762950a32641b6a4d96195c0662ef72998eaeeda31bba0e8e218d41afef
+    container_name: tiangong-gpustack-worker
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+    shm_size: 16gb
+    environment:
+      GPUSTACK_TOKEN: ${GPUSTACK_TOKEN:?Supply private registration token}
+      GPUSTACK_RUNTIME_DEPLOY_MIRRORED_NAME: tiangong-gpustack-worker
+      GPUSTACK_RUNTIME_DOCKER_RESOURCE_INJECTION_POLICY: CDI
+      GPUSTACK_RUNTIME_DOCKER_CDI_SPECS_GENERATE: "false"
+    command:
+      - --server-url
+      - ${GPUSTACK_SERVER_URL:?Supply server URL}
+      - --worker-name
+      - ${GPUSTACK_WORKER_NAME:?Supply worker name}
+      - --worker-ip
+      - ${GPUSTACK_WORKER_IP:?Supply LAN address}
+      - --advertise-address
+      - ${GPUSTACK_WORKER_IP:?Supply LAN address}
+      - --disable-update-check
+    devices:
+      - nvidia.com/gpu=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - data:/var/lib/gpustack
+      - /var/run/cdi:/var/run/cdi:ro
+      - ${GPUSTACK_MODEL_DIR:?Supply existing model directory}:${GPUSTACK_MODEL_DIR:?Supply existing model directory}:ro
+    stop_grace_period: 120s
+    logging:
+      driver: json-file
+      options: {max-size: "20m", max-file: "3"}
+volumes:
+  data: {}

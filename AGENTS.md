@@ -30,6 +30,7 @@
 
 ## 合同与验证
 
+- GPUStack试点使用独立`deploy/gpustack/worker.sh`管理CDI worker，说明见`docs/gpustack-workers.md`。注册配置仅存`.secrets/gpustack-worker/worker.env`；不自动接管旧容器，同一实例只允许一个生命周期管理者。worker注册和模型推理分别验收；停止控制面不代表模型已停止。
 - 原生模型 API 7730。模型名以 `.env` 的 `SERVED_MODEL_NAME` 为准。
 - API key 默认未配置／为空，业务请求无需鉴权；非空 `VLLM_API_KEY` 启用 Bearer 鉴权，验收脚本按配置检查对应行为；健康检查不等于可推理。不要把 Compose 展开配置或 `.env` 内容写入日志、对话、Git。
 - 发布前执行 `uv run --group dev black --check scripts tests deploy/vllm/patches`、`uv run --group dev ruff check scripts tests deploy/vllm/patches`、`uv run --group dev pytest`、`bash -n deploy/manage.sh deploy/vllm/serve.sh`、`deploy/manage.sh config`。
