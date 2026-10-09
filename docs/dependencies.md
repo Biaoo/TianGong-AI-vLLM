@@ -19,7 +19,11 @@
 
 基础镜像 `vllm/vllm-openai@sha256:dea7fa047caa114167efccdeb42321b12d2c11da1add8728aa2662cb8d6b8cd5`，vLLM `0.29.1rc1.dev347+gdee37d891`，构建提交 `dee37d89115db4c94a820a79a78a7828e141c910`，Torch `2.13.0+cu130`、CUDA 13.0、Transformers 5.17.0。它是开发构建，因此固定摘要而不在启动时追踪 nightly。
 
-## Embedding 引擎
+## Nemotron Embedding 引擎
+
+Nemotron 使用独立 vLLM 0.25.0 固定镜像，摘要保存在 deploy/manage-legacy.sh，GPUStack 后端模板见 deploy/gpustack/embed-backend.example.json。其 BF16 pooling、32768 上下文、query/document 与 4096 维协议不沿用 Qwen Embedding 的模型参数。两个模型的镜像、权重和验收相互独立。
+
+## Qwen3-Embedding 引擎
 
 Embedding 独立使用官方 vLLM 0.29.0 稳定版镜像，固定多架构摘要 `sha256:c2914767605584b6d8f45686b82de173ecc99e781897aa3d0a66dacd72c51ae1`，amd64 摘要 `sha256:082ca6f035279109041ffd3fe0695cb568b29bc580b35c4f297a66a08b216c1b`。推理依赖整体随镜像升级，不在镜像启动时 pip 安装或升级 Torch、Transformers、CUDA。镜像内实测 Torch 2.13.0+cu130、Transformers 5.16.1、FlashInfer 0.6.18、CUDA 13.0；生成模型仍使用上面的独立基线。
 

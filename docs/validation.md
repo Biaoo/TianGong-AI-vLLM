@@ -14,11 +14,11 @@ bash -n deploy/manage.sh deploy/vllm/serve.sh
 
 下载工具测试覆盖完整性判断、损坏文件拒收和下载失败不替换已有文件；实例管理测试覆盖 GPU 数量变化、超额并行拒绝、实例隔离、新模型注册、密钥字面值、all 范围和无 GPU 的容器下载。单元测试不需要 GPU，不用替身结果冒充模型实测。
 
-## GPUStack 可选试用检查
+## GPUStack 控制面检查
 
-`tests/test_manage_gpustack.py` 验证试用配置不进入原生 all、凭据权限与不覆盖、控制面没有 GPU/socket 挂载、命令作用域、固定镜像、离线启动约束及模型列表只读检查。Shell 检查增加 `bash -n deploy/gpustack/manage.sh`；初始化私有试用配置后执行 `bash deploy/gpustack/manage.sh config` 验证实际 Compose 解析。
+`tests/test_manage_gpustack.py` 验证控制面配置不进入原生 all、凭据权限与不覆盖、控制面没有 GPU/socket 挂载、命令作用域、固定镜像、离线启动约束及模型列表只读检查。Shell 检查增加 `bash -n deploy/gpustack/manage.sh deploy/gpustack/worker.sh deploy/manage-legacy.sh`；首次初始化私有配置后执行 `bash deploy/gpustack/manage.sh config` 验证实际 Compose 解析。
 
-`bash deploy/gpustack/manage.sh check --model <试用路由>` 只验证鉴权与模型可见性。真实推理、向量兼容性、各副本请求增量与故障恢复须另按 [GPUStack 验收](gpustack.md#检查与验收) 执行；没有实机证据时只报告配置/隔离测试通过。
+`bash deploy/gpustack/manage.sh check --model <路由名称>` 只验证鉴权与模型可见性。真实推理、向量兼容性、各副本请求增量与故障恢复须另按 [GPUStack 验收](gpustack.md#验收与维护) 执行；没有实机证据时只报告配置/隔离测试通过。
 
 ## 模型与真实 API
 
