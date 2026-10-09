@@ -14,6 +14,17 @@ import subprocess
 from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[1]
+MODEL_SPECS = {
+    "model": ("MODEL_DIR", "models/Qwen3.8-Flash-Next-NVFP4", "deploy/vllm/model-manifest.json"),
+    "embedding": ("EMBEDDING_MODEL_DIR", "models/Qwen3-Embedding-8B", "deploy/embedding/model-manifest.json"),
+    "embed": ("EMBED_MODEL_DIR", "models/Nemotron-3-Embed-8B-BF16", "deploy/embed/model-manifest.json"),
+    "embed3": ("EMBED3_MODEL_DIR", "models/Nemotron-3-Embed-8B-BF16", "deploy/embed/model-manifest.json"),
+}
+
+
+def model_directory(model: str, env: dict[str, str]) -> Path:
+    env_key, default_dir, _ = MODEL_SPECS[model]
+    return ROOT / (env.get(env_key) or default_dir)
 
 
 def read_env() -> dict[str, str]:
@@ -89,18 +100,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--group", choices=("model", "embedding"), default="model")
+    parser.add_argument("--group", choices=tuple(MODEL_SPECS), default="model")
     parser.add_argument("--directory", type=Path)
     parser.add_argument("--manifest", type=Path)
     args = parser.parse_args()
-    embedding = args.group == "embedding"
-    directory = args.directory or ROOT / read_env().get(
-        "EMBEDDING_MODEL_DIR" if embedding else "MODEL_DIR",
-        "models/Qwen3-Embedding-8B" if embedding else "models/Qwen3.8-Flash-Next-NVFP4",
-    )
+    directory = args.directory or model_directory(args.group, read_env())
     if not args.verify_only:
         directory.mkdir(parents=True, exist_ok=True)
-    manifest_path = f"deploy/{'embedding' if embedding else 'vllm'}/model-manifest.json"
+    manifest_path = MODEL_SPECS[args.group][2]
     manifest = json.loads((args.manifest or ROOT / manifest_path).read_text())
     lock_context = nullcontext() if args.verify_only else (directory / ".download.lock").open("w")
     with lock_context as lock:
