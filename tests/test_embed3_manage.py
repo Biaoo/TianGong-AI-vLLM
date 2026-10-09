@@ -12,7 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def run_manage(tmp_path: Path, group: str, running_project: str = "") -> tuple[int, list[str]]:
     (tmp_path / "deploy").mkdir()
     (tmp_path / "deploy/manage.sh").write_bytes((ROOT / "deploy/manage.sh").read_bytes())
-    (tmp_path / "deploy/manage-legacy.sh").write_bytes((ROOT / "deploy/manage-legacy.sh").read_bytes())
+    (tmp_path / "deploy/manage-legacy.sh").write_bytes(
+        (ROOT / "deploy/manage-legacy.sh").read_bytes()
+    )
     (tmp_path / ".env").touch()
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()

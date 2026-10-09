@@ -29,13 +29,16 @@
 
 - 模型配置 runtime 默认为 vllm；replicated-http 为每张 GPU 创建一个独立 HTTP worker 与统一 Nginx 网关，不允许 TP/DP/PP 参数。扩缩容必须 restart，worker 各自只看到一张 GPU。新专用 SDK 通过此运行方式接入。
 
-## 可选 GPUStack 控制面
+## GPUStack 控制面
 
-- `deploy/gpustack/worker.sh`独立管理CDI worker，私有注册配置在`.secrets/gpustack-worker/worker.env`；只在已分配的试点GPU上验收，不自动接管旧容器。说明见docs/gpustack-workers.md；Snap/NVIDIA runtime主机需单独适配，不套用CDI模板。
-- `deploy/gpustack/manage.sh` / `scripts/manage_gpustack.py` 独立管理试用控制面，版本和镜像摘要固定在 `deploy/gpustack/release.json`。私有配置位于 `deployments/gpustack/trial.json`，不加入原生模型的 all 范围。控制面默认只监听回环，不挂载 Docker socket、不分配 GPU，显式禁用内嵌 worker。
+- `deploy/gpustack/worker.sh`独立管理CDI worker，私有注册配置在`.secrets/gpustack-worker/worker.env`；只在已分配的托管GPU上验收，不自动接管旧容器。说明见docs/gpustack-workers.md；Snap/NVIDIA runtime主机需单独适配，不套用CDI模板。
+- `deploy/gpustack/manage.sh` / `scripts/manage_gpustack.py` 独立管理正式控制面，版本和镜像摘要固定在 `deploy/gpustack/release.json`。私有配置位于 `deployments/gpustack/server.json`，不加入原生模型的 all 范围。控制面默认只监听回环，不挂载 Docker socket、不分配 GPU，显式禁用内嵌 worker。
 - Ubuntu 控制机可选 `deploy/gpustack/install-docker-ubuntu.sh`，默认 --check 只读；--install 由原主机 sudo 执行，保留 daemon 配置并设置 ip-forward-no-drop，已有 Docker 时不自动改宿主网络。此操作独立于模型部署与 GPUStack 启动。
-- 先接入现有模型 Provider 验证路由，再通过 UI 注册 worker 和独立试用 deployment。代理旧入口不等于接管生命周期；同一实例只能由原生部署器或 GPUStack 之一管理，不自动转换或接管生产容器。
-- init 不覆盖已有配置；bootstrap 与 API key 留在 `.secrets/gpustack-trial/` 且权限为 600。config 静默校验；start/restart 不拉取或构建；stop 保留数据。check 仅验证认证模型列表，不能代替推理、分流和故障恢复验收。操作与边界见 docs/gpustack.md，配置检查另执行 `bash deploy/gpustack/manage.sh config`。
+- 先接入现有模型 Provider 验证路由，再通过 UI 注册 worker 和独立正式 deployment。代理旧入口不等于接管生命周期；同一实例只能由原生部署器或 GPUStack 之一管理，不自动转换或接管生产容器。
+- init 不覆盖已有配置；bootstrap 与 API key 留在 `.secrets/gpustack/` 且权限为 600。config 静默校验；start/restart 不拉取或构建；stop 保留数据。check 仅验证认证模型列表，不能代替推理、分流和故障恢复验收。操作与边界见 docs/gpustack.md，配置检查另执行 `bash deploy/gpustack/manage.sh config`。
+
+- 正式 Compose 项目为 tiangong-gpustack，持久卷 tiangong-gpustack_data。变更名称须冷备并复制原卷，保留路由 ID、注册身份与 API key；核验后才删除旧资源。业务使用稳定主路由，节点路由仅用于诊断。
+- 旧 Nemotron embed/embed3 显式命令由 manage.sh 转发到 manage-legacy.sh，保留互斥与 32768 token 配置；它们不属于通用 all。固定权重见 deploy/embed/model-manifest.json。GPUStack 托管时不得再启动同一原生实例。
 
 ## 已有模型约束
 

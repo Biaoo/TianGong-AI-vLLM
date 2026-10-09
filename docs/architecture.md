@@ -15,7 +15,7 @@
 
 ## 可选 GPUStack 管理层
 
-GPUStack 试用以独立控制面提供模型路由和托管能力，代码入口为 `deploy/gpustack/manage.sh`。仅启用试用时引入其容器内数据库与网关；原生模型部署链路继续独立运行。Provider 模式代理已有接口，原生托管模式由 GPUStack worker 创建模型实例，两者不能混称为接管。试用配置、卷与命令范围独立于原生模型 all，详见 [GPUStack](gpustack.md)。
+GPUStack 正式以独立控制面提供模型路由和托管能力，代码入口为 `deploy/gpustack/manage.sh`。仅启用正式时引入其容器内数据库与网关；原生模型部署链路继续独立运行。Provider 模式代理已有接口，原生托管模式由 GPUStack worker 创建模型实例，两者不能混称为接管。正式配置、卷与命令范围独立于原生模型 all，详见 [GPUStack](gpustack.md)。
 
 ## 生命周期与隔离
 

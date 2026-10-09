@@ -1,4 +1,4 @@
-"""Opt-in GPUStack trial server; does not operate native model instances or workers."""
+"""Opt-in GPUStack server server; does not operate native model instances or workers."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
-PROJECT = "tiangong-gpustack-trial"
+PROJECT = "tiangong-gpustack"
 
 
 def private_write(path, text):
@@ -37,32 +37,32 @@ def private_read(path):
 
 
 def initialize():
-    config = ROOT / "deployments/gpustack/trial.json"
-    password = ROOT / ".secrets/gpustack-trial/bootstrap-password"
+    config = ROOT / "deployments/gpustack/server.json"
+    password = ROOT / ".secrets/gpustack/bootstrap-password"
     if config.exists():
-        raise ValueError("Trial configuration already exists; it was not overwritten")
+        raise ValueError("Server configuration already exists; it was not overwritten")
     if password.exists():
         private_read(password)
     else:
         private_write(password, secrets.token_urlsafe(32) + "\n")
-    template = ROOT / "deploy/gpustack/trial.example.json"
+    template = ROOT / "deploy/gpustack/server.example.json"
     private_write(config, template.read_text())
-    print("Initialized deployments/gpustack/trial.json")
-    print("Admin bootstrap credential: .secrets/gpustack-trial/bootstrap-password")
+    print("Initialized deployments/gpustack/server.json")
+    print("Admin bootstrap credential: .secrets/gpustack/bootstrap-password")
     print("No containers started; no models or workers registered.")
 
 
 def load_config():
-    config = json.loads((ROOT / "deployments/gpustack/trial.json").read_text())
+    config = json.loads((ROOT / "deployments/gpustack/server.json").read_text())
     if set(config) != {"host", "port"}:
-        raise ValueError("Trial configuration requires only host and port")
+        raise ValueError("Server configuration requires only host and port")
     address = ipaddress.ip_address(config["host"])
     if address.version != 4 or address.is_unspecified or address.is_multicast:
-        raise ValueError("Set a concrete IPv4 bind address, preferably loopback for the trial")
+        raise ValueError("Set a concrete IPv4 bind address, preferably loopback for the server")
     if not (address.is_private or address.is_loopback):
         raise ValueError("Use a local or private LAN bind address")
     if type(config["port"]) is not int or not 1024 <= config["port"] <= 65535:
-        raise ValueError("Trial port must be an integer between 1024 and 65535")
+        raise ValueError("Server port must be an integer between 1024 and 65535")
     return config
 
 
@@ -99,7 +99,7 @@ def escape_compose(value):
 
 
 def run_compose(action, config):
-    password = private_read(ROOT / ".secrets/gpustack-trial/bootstrap-password")
+    password = private_read(ROOT / ".secrets/gpustack/bootstrap-password")
     commands = {
         "config": ["config", "--quiet"],
         "pull": ["pull", "server"],
@@ -130,12 +130,12 @@ def run_compose(action, config):
     )
     if result.returncode:
         raise RuntimeError(
-            f"GPUStack trial {action} failed (exit {result.returncode}); inspect Docker locally"
+            f"GPUStack server {action} failed (exit {result.returncode}); inspect Docker locally"
         )
     if action == "status":
         print(result.stdout, end="")
     else:
-        print(f"GPUStack trial {action}: OK")
+        print(f"GPUStack server {action}: OK")
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -144,7 +144,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def check_gateway(config, model=None):
-    key = private_read(ROOT / ".secrets/gpustack-trial/api-key")
+    key = private_read(ROOT / ".secrets/gpustack/api-key")
     base = f"http://{config['host']}:{config['port']}"
     request = urllib.request.Request(
         base + "/v1/models", headers={"Authorization": "Bearer " + key}
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
         # JSON decoding errors may contain snippets; subprocess errors may contain command details.
         if isinstance(exc, (json.JSONDecodeError, OSError, subprocess.TimeoutExpired)):
-            print(f"GPUStack trial failed: {type(exc).__name__}", file=sys.stderr)
+            print(f"GPUStack server failed: {type(exc).__name__}", file=sys.stderr)
         else:
             print(str(exc), file=sys.stderr)
         sys.exit(1)

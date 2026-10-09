@@ -16,9 +16,21 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_SPECS = {
     "model": ("MODEL_DIR", "models/Qwen3.8-Flash-Next-NVFP4", "deploy/vllm/model-manifest.json"),
-    "embedding": ("EMBEDDING_MODEL_DIR", "models/Qwen3-Embedding-8B", "deploy/embedding/model-manifest.json"),
-    "embed": ("EMBED_MODEL_DIR", "models/Nemotron-3-Embed-8B-BF16", "deploy/embed/model-manifest.json"),
-    "embed3": ("EMBED3_MODEL_DIR", "models/Nemotron-3-Embed-8B-BF16", "deploy/embed/model-manifest.json"),
+    "embedding": (
+        "EMBEDDING_MODEL_DIR",
+        "models/Qwen3-Embedding-8B",
+        "deploy/embedding/model-manifest.json",
+    ),
+    "embed": (
+        "EMBED_MODEL_DIR",
+        "models/Nemotron-3-Embed-8B-BF16",
+        "deploy/embed/model-manifest.json",
+    ),
+    "embed3": (
+        "EMBED3_MODEL_DIR",
+        "models/Nemotron-3-Embed-8B-BF16",
+        "deploy/embed/model-manifest.json",
+    ),
 }
 
 

@@ -42,9 +42,9 @@ Laya 按每卡一个完整模型副本运行，统一入口默认 `http://127.0.
 
 已有四卡 Qwen3.8 部署仍可通过 `.env` 与 `manage.sh <action> model` 管理，保留原 Compose 身份；新部署优先使用实例文件。迁移为实例文件时须按[多模型管理](docs/models.md)保留原项目名称。`.env` 可保存实例通过 `api_key_env` 引用的密钥；默认不启用鉴权。
 
-## 可选 GPUStack 试用
+## 可选 GPUStack 正式
 
-需要统一模型入口、跨主机副本管理与负载均衡时，可使用独立的 `bash deploy/gpustack/manage.sh`。先执行 `init`、`config`，再显式 `pull`、`start`；默认只启动本机控制面，不分配 GPU 或迁移现有模型。现有接口代理与 GPUStack 原生托管分阶段验证，详见 [GPUStack 试用](docs/gpustack.md)。
+统一模型入口与跨主机副本由 `bash deploy/gpustack/manage.sh` 管理控制面，`worker.sh` 管理 GPU worker。首次安装执行 init/config/pull/start，已有部署沿用数据库与私有配置。模型和原生部署器互斥，详见 [GPUStack 控制面](docs/gpustack.md)。
 
 ## 文档与开发
 
