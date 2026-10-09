@@ -1,33 +1,35 @@
 # 架构
 
-## 服务边界
+## 模型与机器分离
 
 ```text
-Chat / 图片 / 工具客户端 ──可选 Bearer──> Docker vLLM :7730 ──> 4 GPU TP + EP
-                                        │
-                           只读模型目录 + 独立编译缓存卷
+共享模型配置 deploy/profiles/*.json ─┐
+                                    ├─ manage_models.py ─ Docker Compose ─ 实例 A
+私有机器实例 deployments/*.json ────┘                                  └─ 实例 B
+模型清单 ─ download_model.py ─ 校验后的权重目录（只读挂载，可复用）
 ```
 
-模型服务负责 tokenizer、模型原生 chat template、量化内核、KV cache、批处理和 OpenAI-compatible API。无需额外应用层、Redis、数据库或 PM2；Docker Compose 管理模型，Docker 负责退出恢复和日志轮转。
+模型配置定义镜像、权重身份、默认启动参数和验收脚本；机器实例定义 GPU 列表、并行规模、端口、上下文、显存预算和目录。同一模型可部署多个实例，新增同类模型通过配置注册；专用 SDK 可使用 replicated-http 运行方式。具体字段见[多模型管理](models.md)。
 
-## 文件与数据
+推理引擎负责 tokenizer、原生模型模板、内核、批处理和 OpenAI-compatible API。Docker Compose 负责实例容器、网络、缓存卷、日志轮转和退出恢复。无需额外代理、Redis、数据库或 PM2。
 
-- `deploy/vllm/`：Compose、模型修订和完整性清单；`deploy/manage.sh`：统一管理入口。
-- `scripts/`：无第三方 Python 运行时依赖的下载、完整性校验和真实验收工具。
-- `tests/`：下载完整性及失败处理测试。
-- `docs/`：当前架构、部署和使用说明；`examples/`：可复制的 HTTP 请求。
-- `.env`：私有部署覆盖及密钥；`.env.example`：公开配置骨架。
-- `models/`：私有模型，推理容器只读挂载；独立 Compose volume 保存编译缓存。
-- `output/validation/`：私有真实响应、耗时和失败原因；不纳入 Git。
+## 生命周期与隔离
 
-## 生命周期
+统一入口 `deploy/manage.sh` 从任意工作目录定位仓库。默认项目名 `tiangong-<实例名>`，容器服务名 inference、内部 API 端口 8000；不同实例独立选择主机端口和 GPU。模型目录只读，缓存卷按项目隔离。GPU 可以显式共享，但必须人工核对总显存预算，此工具不自动调度 GPU。
 
-`deploy/manage.sh` 根据脚本位置定位仓库，不依赖调用方工作目录。Compose 项目名固定 `tiangong-vllm`，只管理此项目的 model。start 不重建运行中容器；restart 重建以应用新环境和命令；stop 保留磁盘资源。
+start 不重建已有容器；restart 应用新配置；stop 保留模型、缓存和证据。all 仅枚举本机 deployments，不自动启动模型目录中的全部模型配置。旧 .env 生成模型保留 tiangong-vllm/model 的兼容身份，通过显式 model 操作。
 
-模型 GPU ID 由四个 `GPU_0..GPU_3` 配置；张量并行参数须与实际模型拓扑匹配。变更 GPU 数量需同步调整 Compose 设备列表。容器内端口固定 8000，主机默认映射 7730。
+## 文件与接口
 
-## API 合同
+- `deploy/profiles/`：镜像、默认参数、下载清单路径和模型验收脚本。
+- `deploy/examples/`：不含主机私有路径的实例模板；`deployments/`：私有部署实例。
+- `deploy/vllm/`：Qwen3.8 构建修复和模型清单；`deploy/embedding/`：Qwen3 embedding 清单。
+- `.env`：私有密钥及旧生成模型机器配置；`models/`：私有权重目录。
+- `scripts/`：标准库实现的配置管理、下载、完整性校验与真实 API 验收。
+- `output/validation/`：真实响应、耗时、失败原因等私有证据。
 
-客户端直接调用模型 `/v1/chat/completions`；对话历史由客户端完整传入。不再提供额外 Responses 兼容层或内存会话存储。本项目承诺验收的接口见 AI 接入说明，不因为引擎暴露其他路由就认为其已通过本项目验证。
+Embedding 客户端调用 `/v1/embeddings`；生成模型客户端调用 `/v1/chat/completions`。不因引擎暴露某条路由就视为通过验收，每个模型配置指定独立 check_script。旧模型模板和生成专用参数不自动套用到新模型。
 
-不将旧模型专用模板强行移植到新模型。新模型的 system 指令、工具调用与 reasoning 必须通过真实请求验收。
+## 每卡独立 HTTP 副本
+
+Laya 采用一个机器实例管理多个 worker 和一个 Nginx 网关。gpus 列表中的每张卡分配一个完整模型容器，仅开放容器内部端口；统一网关在宿主发布 7720，以最少连接数调度。每个 worker 一个 Python 模型进程和单独请求队列，不进行跨 GPU 模型切分。该运行方式由通用管理器的 replicated-http 实现，模型专用逻辑在容器入口与 check_script 中。

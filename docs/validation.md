@@ -3,15 +3,16 @@
 ## 静态与本地回归
 
 ```bash
+export UV_PROJECT_ENVIRONMENT=.venv-dev
 uv sync --locked --group dev
-uv run --group dev black --check scripts tests deploy/vllm/patches
-uv run --group dev ruff check scripts tests deploy/vllm/patches
+uv run --group dev black --check scripts tests deploy/vllm/patches deploy/laya
+uv run --group dev ruff check scripts tests deploy/vllm/patches deploy/laya
 uv run --group dev pytest
 bash -n deploy/manage.sh deploy/vllm/serve.sh
-./deploy/manage.sh config
+./deploy/manage.sh config all
 ```
 
-下载工具测试覆盖完整性判断、损坏文件拒收和下载失败不替换已有文件。单元测试不需要 GPU，不用替身结果冒充模型实测。
+下载工具测试覆盖完整性判断、损坏文件拒收和下载失败不替换已有文件；实例管理测试覆盖 GPU 数量变化、超额并行拒绝、实例隔离、新模型注册、密钥字面值、all 范围和无 GPU 的容器下载。单元测试不需要 GPU，不用替身结果冒充模型实测。
 
 ## 模型与真实 API
 
@@ -54,3 +55,23 @@ bash -n deploy/manage.sh deploy/vllm/serve.sh
 自动调优的分布式回归与缓存重启验证见[运行时修复](runtime-patches.md)。性能测量运行 `python3 scripts/benchmark.py --label <配置名称>`，先完成对应配置的真实功能验收，再比较基线、MTP 及通信后端。每个场景先预热，再重复三组测量；原始输出、请求 token 数、TTFT、墙钟吞吐及前后指标保存到 `output/benchmarks/`。运行中容器发生变化会拒绝该次结果。
 
 测量使用固定 256 输出 token、temperature=0、关闭 thinking、SSE 和 ignore_eos。三场景是 66 token 短输入单路、13526 token 合成记录输入单路、短输入四路并发。每请求在 system 开头使用不同 ID，避免整段 prefix cache 命中；实际输入 token 数保存在证据中。指标为端到端吞吐（包含 prefill 和网络），不是纯 decode 峰值。固定长度输出仅用于性能对照，质量由独立的 smoke 验收检查；详细结果集中在[性能调优](performance-tuning.md)。
+
+## Embedding 验收
+
+`deploy/manage.sh check embedding` 进行真实向量请求：模型身份、按配置鉴权、单条/批量和中英文输入、4096 维单位向量、1024 维输出、base64、六路并发共 12 次请求、非法维度 HTTP 400、未知模型 HTTP 404，以及一个检索排序样本。结果写入 `output/validation/embedding-<UTC时间>.json`。
+
+迁移前保存 `{"payload": <embedding请求>, "response": <旧服务响应>}` 到私有文件；迁移后执行 `python3 scripts/check_embedding.py --baseline <文件>`，要求相同输入新旧向量余弦相似度大于 0.995。此阈值是迁移回归检查，不代表完整检索评测、最大长度或持续并发性能。
+
+## Embedding Docker 迁移基线
+
+2026-09-21 在三张 RTX PRO 6000 Blackwell 上以 DP3/TP1 完成 vLLM 0.20.2 原生服务到 0.29.0 Docker 服务的迁移。容器 healthy，保留 7710 端口、模型名及 40960 上下文配置；上述 embedding 功能验收全部通过。四个固定中英文样本与原生服务向量的余弦相似度为 0.999848–0.999961，验证阈值为 0.995。模型 16 个文件在只读容器中通过 SHA256 校验。
+
+本地 20 项测试、Black、Ruff、Shell 语法和实例 Compose 检查通过。单卡/四卡模板仅验证配置生成，实际 GPU 推理本次只验证三卡 embedding；没有在本机启动四卡生成模型，也未执行整机重启或满长并发压力测试。
+
+## Laya 单卡到三卡验收
+
+运行 `deploy/manage.sh check laya`，以真实 CUDA 推理检查中文退款样本、英文/结构化输入、choice/score/noul 返回范围、错误输入状态码及并发请求覆盖所有副本。模型副本数来自本机实例 GPU 列表，不能只检查网关健康。运行 `python3 scripts/check_laya.py --benchmark --label <单卡或三卡>` 比较相同样本，原始响应、吞吐和副本分布保存到私有 output/validation。
+
+Laya 新增回归覆盖输入与批量边界、未知模型、tokenizer 修复不改写原权重、逐卡 GPU 隔离、禁止跨卡参数、生命周期操作涵盖全部 worker 和网关。
+
+本次 Laya 单卡与三卡真实验收及最大 32 问题批量检查均通过；性能条件和实测显存见 [Laya 部署记录](laya.md)。本地回归共 32 项通过。

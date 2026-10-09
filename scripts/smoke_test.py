@@ -29,7 +29,10 @@ def red_png() -> str:
 
 def main() -> None:
     env = read_env()
-    base = f"http://127.0.0.1:{env.get('VLLM_PORT', '7730')}"
+    host = env.get("VLLM_HOST", "127.0.0.1")
+    if host in ("0.0.0.0", "::"):
+        host = "127.0.0.1"
+    base = f"http://{host}:{env.get('VLLM_PORT', '7730')}"
     model = env.get("SERVED_MODEL_NAME", "nv-community/Qwen3.8-Flash-Next-NVFP4")
     api_key = env.get("VLLM_API_KEY", "")
     headers = {"Content-Type": "application/json"}

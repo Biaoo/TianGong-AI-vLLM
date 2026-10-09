@@ -1,0 +1,27 @@
+{
+  "model_id": "convaiinnovations/laya-multilingual",
+  "runtime": "replicated-http",
+  "image": "tiangong/laya:0.3.4-cu130-v1",
+  "gateway_image": "nginx@sha256:5aca99593157f4ae539a5dec1092a0ad8762f8e2eb1789085a13a0f5622369f6",
+  "manifest": "deploy/laya/model-manifest.json",
+  "task": "decisions",
+  "build": {
+    "context": ".",
+    "dockerfile": "deploy/laya/Dockerfile"
+  },
+  "entrypoint": [
+    "python3",
+    "/opt/tiangong/laya_server.py"
+  ],
+  "environment": {
+    "OMP_NUM_THREADS": "1",
+    "USE_TF": "0",
+    "TOKENIZERS_PARALLELISM": "false"
+  },
+  "options": {
+    "max-model-len": 1024,
+    "max-questions": 32,
+    "max-pending": 64
+  },
+  "check_script": "scripts/check_laya.py"
+}

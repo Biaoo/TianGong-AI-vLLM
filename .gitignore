@@ -1,6 +1,8 @@
 .env
 .secrets/
 .venv/
+.venv-dev/
+deployments/
 __pycache__/
 *.py[cod]
 .pytest_cache/

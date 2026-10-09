@@ -1,0 +1,19 @@
+{
+  "profile": "qwen38-flash-next-nvfp4",
+  "model_dir": "models/Qwen3.8-Flash-Next-NVFP4",
+  "gpus": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "gpu_mode": "cdi",
+  "host": "0.0.0.0",
+  "port": 7730,
+  "api_key_env": "VLLM_API_KEY",
+  "options": {
+    "tensor-parallel-size": 4,
+    "max-model-len": 262144,
+    "gpu-memory-utilization": 0.85
+  }
+}

@@ -5,3 +5,7 @@
 !deploy/vllm/serve.sh
 !deploy/vllm/patches/
 !deploy/vllm/patches/apply_runtime_fixes.py
+!deploy/laya/
+!deploy/laya/Dockerfile
+!deploy/laya/requirements.txt
+!deploy/laya/server.py

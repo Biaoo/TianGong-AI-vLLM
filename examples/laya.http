@@ -1,0 +1,26 @@
+### Typed decisions (default: no API key)
+POST http://127.0.0.1:7720/v1/decisions
+Content-Type: application/json
+
+{
+  "model": "convaiinnovations/laya-multilingual",
+  "state": "这笔订单被重复扣款了，请财务部门今天把多收的钱退给我。",
+  "questions": {
+    "department": {
+      "type": "choice",
+      "instructions": "Which team should handle this message?",
+      "criteria": {
+        "billing": "payments, invoices, refunds",
+        "technical": "software bugs and outages",
+        "sales": "pricing and new purchases"
+      }
+    },
+    "refund": {
+      "type": "noul",
+      "instructions": "Does the sender request a refund?"
+    }
+  }
+}
+
+### Model identity
+GET http://127.0.0.1:7720/v1/models
