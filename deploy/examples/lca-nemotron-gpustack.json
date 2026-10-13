@@ -1,0 +1,27 @@
+{
+  "source": "local_path",
+  "name": "lca-nemotron-1b-node-gpu0",
+  "description": "LCA reference runtime, fixed release 6d77edaa; replace node, path and allowed controller before applying",
+  "local_path": "/srv/models/lca-nemotron-embed-1b/6d77edaa3b92dd1b7e3dd8a152ea7170a8b581c5",
+  "backend": "tiangong-lca-nemotron-custom",
+  "backend_version": "st5.3.0-r1-custom",
+  "backend_parameters": [
+    "--allowed-clients 127.0.0.1",
+    "--batch-size=8",
+    "--queue-size=8",
+    "--queue-timeout=30",
+    "--inference-timeout=120",
+    "--memory-fraction=0.15"
+  ],
+  "gpu_selector": {"gpu_ids": ["node:cuda:0"], "gpus_per_replica": 1},
+  "replicas": 1,
+  "categories": ["embedding"],
+  "placement_strategy": "spread",
+  "cpu_offloading": false,
+  "distributed_inference_across_workers": false,
+  "restart_on_error": true,
+  "generic_proxy": true,
+  "enable_model_route": false,
+  "access_policy": "authed",
+  "cluster_id": 1
+}

@@ -44,6 +44,7 @@
 
 ## 已有模型约束
 
+- LCA-Nemotron-Embed-1B：固定发布版 Sentence Transformers 参考路径，GPUStack 每卡一个独立 custom deployment，统一鉴权 generic-proxy 路由。显式 query/document、512/2048 tokens、2048 维；不接受 dimensions 或 encoding_format。构建、资源限制、固定依赖和完整 HTTP/reference benchmark 验收见 docs/lca-nemotron.md；实现 deploy/lca-nemotron，check_script 为 scripts/check_lca_nemotron.py。不得沿用通用 Nemotron 的 vLLM 镜像或 API 合同。
 - Laya Multilingual：SDK 0.3.4，默认 API 7720 的 `/v1/decisions`；1024 tokens，最多 32 问题/请求，每卡一个完整模型。单卡验收通过再扩到三卡；不得把它配置为跨卡模型并行。SDK 的 tokenizer 修复只作用于临时副本，模型目录只读；禁止把 CPU 回退当作 GPU 部署成功。见 docs/laya.md。
 - Qwen3-Embedding-8B：默认模型名 Qwen/Qwen3-Embedding-8B，默认 API 7710，4096 维输出；显式 pooling runner 和 Matryoshka 声明支持 dimensions。三卡 DP3 是一个机器模板，单卡也应能配置。不得混入生成模型的 MTP/工具解析参数。
 - Qwen3.8-Flash-Next-NVFP4：默认 API 7730、262144 token 上下文、TP4 + EP4、GPU PLE、FlashInfer 自动调优、MTP 3 与 NCCL。保留自动调优，相关故障须修复；运行时补丁由 Dockerfile 和上游 SHA256 固定，见 docs/runtime-patches.md。
@@ -52,6 +53,6 @@
 ## 验证与发布
 
 - 默认 API key 空；非空 key 从实例 api_key_env 指向的私有变量读取，业务请求使用 Bearer。不得输出 Compose 展开配置、.env 或凭证。
-- 本地检查：设置 `UV_PROJECT_ENVIRONMENT=.venv-dev` 后执行 `uv run --group dev black --check scripts tests deploy/vllm/patches deploy/laya`、`uv run --group dev ruff check scripts tests deploy/vllm/patches deploy/laya`、`uv run --group dev pytest`；执行 `bash -n deploy/manage.sh deploy/vllm/serve.sh` 与目标实例 `manage.sh config`。
+- 本地检查：设置 `UV_PROJECT_ENVIRONMENT=.venv-dev` 后执行 `uv run --group dev black --check scripts tests deploy/vllm/patches deploy/laya deploy/lca-nemotron`、`uv run --group dev ruff check scripts tests deploy/vllm/patches deploy/laya deploy/lca-nemotron`、`uv run --group dev pytest`；执行 `bash -n deploy/manage.sh deploy/vllm/serve.sh deploy/lca-nemotron/build.sh` 与目标实例 `manage.sh config`。GPUStack 托管的 LCA 使用独立 backend/deployment 模板与其 check_script，不加入原生模型管理器的 all。
 - 真实验收用 `manage.sh check <实例名>`。embedding 检查单条/批量、中英文、4096/1024 维、base64、并发、错误输入和检索排序；原生迁移另对比旧向量。Laya 检查中英文 typed decisions、概率范围、错误输入和请求分布；生成模型检查文本、角色、SSE、工具、图片和推理。失败必须报告，health 不等于验收。
 - 新模型必须配置对应 check_script 才能声明通过验收；不要用替身测试冒充 GPU/模型测试。质量和性能结论只覆盖实际样本；短输入不代表最大上下文或持续并发能力。

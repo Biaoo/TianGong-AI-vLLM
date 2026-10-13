@@ -46,6 +46,8 @@ Laya 按每卡一个完整模型副本运行，统一入口默认 `http://127.0.
 
 统一模型入口与跨主机副本由 `bash deploy/gpustack/manage.sh` 管理控制面，`worker.sh` 管理 GPU worker。首次安装执行 init/config/pull/start，已有部署沿用数据库与私有配置。模型和原生部署器互斥，详见 [GPUStack 控制面](docs/gpustack.md)。
 
+[LCA-Nemotron-Embed-1B](docs/lca-nemotron.md) 使用固定 Sentence Transformers 参考镜像，每卡一个 GPUStack custom deployment；统一鉴权路由提供显式 query/document、2048 维向量，并通过完整 HTTP/reference 检索基准验收。
+
 ## 文档与开发
 
 | 文档 | 内容 |
@@ -63,8 +65,8 @@ Laya 按每卡一个完整模型副本运行，统一入口默认 `http://127.0.
 ```bash
 export UV_PROJECT_ENVIRONMENT=.venv-dev
 uv sync --locked --group dev
-uv run --group dev black --check scripts tests deploy/vllm/patches deploy/laya
-uv run --group dev ruff check scripts tests deploy/vllm/patches deploy/laya
+uv run --group dev black --check scripts tests deploy/vllm/patches deploy/laya deploy/lca-nemotron
+uv run --group dev ruff check scripts tests deploy/vllm/patches deploy/laya deploy/lca-nemotron
 uv run --group dev pytest
 ```
 
