@@ -44,6 +44,8 @@
 
 ## 已有模型约束
 
+- H3 NVFP4：见 docs/h3.md；固定 FastH3 Omni NVFP4 QAD 和原版视频/音频 VAE 清单，ModelScope 镜像仍按原 HF 散列验证。已通过 SM120 单卡、GPUStack 鉴权路由的 5 秒 480P/768P 音视频验收；默认 36 层解码器、逐层卸载、运行并发 1。快速解码器、长视频与压力测试尚未验收。专用脚本与固定依赖镜像位于 scripts/download_hf_snapshot.py、scripts/check_h3.py、deploy/h3，GPUStack 模板位于 deploy/examples/h3-gpustack-*.json，不加入原生 all；不能把 Ref2VA 描述成无需参考的纯文生视频。
+
 - LCA-Nemotron-Embed-1B：固定发布版 Sentence Transformers 参考路径，GPUStack 每卡一个独立 custom deployment，统一鉴权 generic-proxy 路由。显式 query/document、512/2048 tokens、2048 维；不接受 dimensions 或 encoding_format。构建、资源限制、固定依赖和完整 HTTP/reference benchmark 验收见 docs/lca-nemotron.md；实现 deploy/lca-nemotron，check_script 为 scripts/check_lca_nemotron.py。不得沿用通用 Nemotron 的 vLLM 镜像或 API 合同。
 - Laya Multilingual：SDK 0.3.4，默认 API 7720 的 `/v1/decisions`；1024 tokens，最多 32 问题/请求，每卡一个完整模型。单卡验收通过再扩到三卡；不得把它配置为跨卡模型并行。SDK 的 tokenizer 修复只作用于临时副本，模型目录只读；禁止把 CPU 回退当作 GPU 部署成功。见 docs/laya.md。
 - Qwen3-Embedding-8B：默认模型名 Qwen/Qwen3-Embedding-8B，默认 API 7710，4096 维输出；显式 pooling runner 和 Matryoshka 声明支持 dimensions。三卡 DP3 是一个机器模板，单卡也应能配置。不得混入生成模型的 MTP/工具解析参数。

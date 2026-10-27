@@ -1,0 +1,25 @@
+{
+  "source": "local_path",
+  "name": "fasth3-nvfp4-example",
+  "local_path": "/srv/models/h3/f01e6a23ac6066aa9eb622cf94b6259442e70ec2",
+  "backend": "tiangong-h3-nvfp4-custom",
+  "backend_version": "ee37ec06-vllm032-r6",
+  "backend_parameters": [
+    "--allowed-clients=127.0.0.1,::1,<gateway-ip>,<worker-ip>",
+    "--memory-fraction=0.35",
+    "--decoder=quality"
+  ],
+  "env": {"GPUSTACK_MODEL_VRAM_CLAIM": "38654705664"},
+  "replicas": 0,
+  "categories": ["unknown"],
+  "placement_strategy": "spread",
+  "cpu_offloading": false,
+  "distributed_inference_across_workers": false,
+  "restart_on_error": true,
+  "generic_proxy": true,
+  "enable_model_route": false,
+  "access_policy": "authed",
+  "cluster_id": 1,
+  "worker_selector": {"worker-name": "<worker-name>"},
+  "gpu_selector": {"gpu_ids": ["<worker-name>:cuda:<gpu-index>"], "gpus_per_replica": 1}
+}
