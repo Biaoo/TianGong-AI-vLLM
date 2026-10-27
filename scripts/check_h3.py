@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--key-stdin", action="store_true", required=True)
     parser.add_argument("--seed", default=1234, type=int)
+    parser.add_argument("--size", choices=["832x480", "1344x768"], default="832x480")
     parser.add_argument(
         "--prompt",
         default=(
@@ -36,7 +37,7 @@ def main():
     args.output_dir.mkdir(parents=True, exist_ok=False)
     boundary = "h3-" + uuid.uuid4().hex
     body = bytearray()
-    fields = {"prompt": args.prompt, "size": "832x480", "seconds": "5", "seed": str(args.seed)}
+    fields = {"prompt": args.prompt, "size": args.size, "seconds": "5", "seed": str(args.seed)}
     for name, value in fields.items():
         body.extend(
             f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode()
@@ -75,7 +76,7 @@ def main():
     media = json.loads(probe.stdout)
     video = next(s for s in media["streams"] if s["codec_type"] == "video")
     audio = next(s for s in media["streams"] if s["codec_type"] == "audio")
-    if (video["width"], video["height"]) != (832, 480):
+    if (video["width"], video["height"]) != tuple(map(int, args.size.split("x"))):
         raise RuntimeError("Unexpected video dimensions")
     if Fraction(video["avg_frame_rate"]) != 24 or int(video["nb_frames"]) != 124:
         raise RuntimeError("Expected 124 frames at 24 FPS")
@@ -92,7 +93,7 @@ def main():
         "elapsed_seconds": round(elapsed, 3),
         "media": media,
         "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
-        "scope": "One 480P reference-to-video sample with stereo audio; human quality review pending",
+        "scope": f"One {args.size} reference-to-video sample with stereo audio; human quality review pending",
     }
     (args.output_dir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(
