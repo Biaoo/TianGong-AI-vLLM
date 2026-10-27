@@ -22,6 +22,7 @@ def main():
     parser.add_argument("--transport", choices=["curl", "hub", "modelscope"], default="curl")
     parser.add_argument("--mirror-model")
     parser.add_argument("--mirror-revision")
+    parser.add_argument("--ipv4", action="store_true", help="Use IPv4 for curl downloads")
     parser.add_argument("--workers", type=int, default=3)
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--manifest-only", action="store_true")
@@ -156,6 +157,7 @@ def main():
             subprocess.run(
                 [
                     "curl",
+                    *(["--ipv4"] if args.ipv4 else []),
                     "--http1.1",
                     "-fLsS",
                     "--retry",

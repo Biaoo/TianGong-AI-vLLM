@@ -89,7 +89,6 @@ def main():
         str(args.port),
         "--middleware",
         "h3_runtime.AllowedClients",
-        "--disable-log-requests",
     ]
     if args.decoder == "fast":
         import json
