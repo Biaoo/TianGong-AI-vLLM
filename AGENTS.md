@@ -44,6 +44,8 @@
 
 ## 已有模型约束
 
+- H3 FL2VA：首尾帧使用原版 MiniMax H3 的独立 FL2VA 分区及路由，不能用两张 Ref2VA 参考图代替。配置、固定清单和启动器位于 deploy/h3-fl2va；单卡在线 FP8、逐层卸载、50 步，验收脚本 scripts/check_h3_fl2va.py，说明见 docs/h3-fl2va.md。初始副本为 0；release.json 的状态区分构建/本地测试与真实 GPU 生成，不能把预配置当作已上线。不修改原 FastH3 deployment，不加入原生 all。
+
 - H3 NVFP4：见 docs/h3.md；固定 FastH3 Omni NVFP4 QAD 和原版视频/音频 VAE 清单，ModelScope 镜像仍按原 HF 散列验证。已通过 SM120 单卡、GPUStack 鉴权路由的 5 秒 480P/768P 音视频验收；默认 36 层解码器、逐层卸载、运行并发 1。快速解码器、长视频与压力测试尚未验收。专用脚本与固定依赖镜像位于 scripts/download_hf_snapshot.py、scripts/check_h3.py、deploy/h3，GPUStack 模板位于 deploy/examples/h3-gpustack-*.json，不加入原生 all；不能把 Ref2VA 描述成无需参考的纯文生视频。
 
 - LCA-Nemotron-Embed-1B：固定发布版 Sentence Transformers 参考路径，GPUStack 每卡一个独立 custom deployment，统一鉴权 generic-proxy 路由。显式 query/document、512/2048 tokens、2048 维；不接受 dimensions 或 encoding_format。构建、资源限制、固定依赖和完整 HTTP/reference benchmark 验收见 docs/lca-nemotron.md；实现 deploy/lca-nemotron，check_script 为 scripts/check_lca_nemotron.py。不得沿用通用 Nemotron 的 vLLM 镜像或 API 合同。

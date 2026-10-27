@@ -1,0 +1,25 @@
+{
+  "source": "local_path",
+  "name": "h3-fl2va-example",
+  "local_path": "/srv/models/h3/fl2va/9bfb6693f2cf6de171db46d1aa586f67d773a1da/FL2VA",
+  "backend": "tiangong-h3-fl2va-custom",
+  "backend_version": "ee37ec06-fp8-r1",
+  "backend_parameters": [
+    "--allowed-clients=127.0.0.1,::1,<gateway-ip>,<worker-ip>",
+    "--memory-fraction=0.30",
+    "--read-only-model-root=/srv/models/h3"
+  ],
+  "env": {"GPUSTACK_MODEL_VRAM_CLAIM": "34359738368"},
+  "replicas": 0,
+  "categories": ["unknown"],
+  "placement_strategy": "spread",
+  "cpu_offloading": false,
+  "distributed_inference_across_workers": false,
+  "restart_on_error": true,
+  "generic_proxy": true,
+  "enable_model_route": false,
+  "access_policy": "authed",
+  "cluster_id": 1,
+  "worker_selector": {"worker-name": "<worker-name>"},
+  "gpu_selector": {"gpu_ids": ["<worker-name>:cuda:<gpu-index>"], "gpus_per_replica": 1}
+}

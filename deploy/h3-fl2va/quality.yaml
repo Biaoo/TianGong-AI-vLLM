@@ -1,0 +1,21 @@
+# Verified against vLLM-Omni ee37ec0620a99b3787dab5e5e3bd1f5cdfd0615f.
+trust-remote-code: true
+enforce-eager: true
+num-gpus: 1
+task-type: fl2va
+quantization: fp8
+vae-use-tiling: true
+max-num-seqs: 1
+worker-extension-cls: h3_runtime.MemoryBudget
+diffusion-offload-config:
+  mode: layer
+  components: [dit, text_encoder]
+diffusion-attention-config:
+  default:
+    backend: CUDNN_ATTN
+default-sampling-params:
+  "0":
+    num_inference_steps: 50
+    guidance_scale: 1
+init-timeout: 3600
+stage-init-timeout: 3600

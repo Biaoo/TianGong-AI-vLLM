@@ -1,0 +1,20 @@
+{
+  "status": "prepared: image built and local regression passed; GPU generation pending model download",
+  "upstream_source": "https://github.com/vllm-project/vllm-omni",
+  "upstream_commit": "ee37ec0620a99b3787dab5e5e3bd1f5cdfd0615f",
+  "base_image": "tiangong-h3:ee37ec06-vllm032-r6",
+  "base_image_id": "sha256:7c15800cfc4c259d77218eca5c6283dbbedc90dbe180b25a54524c3ded3dd5a0",
+  "runtime_image": "tiangong-h3-fl2va:ee37ec06-fp8-r1",
+  "image_id": "sha256:96c018e4a2cd678c0acfa8ee1cc7e400d2aa6af2234adb2bd348697116ff0f28",
+  "runtime_compatibility": "Inherited vLLM 0.32.0, Torch 2.13.0+cu130 and FlashInfer 0.7.0.post1; no dependency changes",
+  "model": {
+    "id": "MiniMaxAI/MiniMax-H3",
+    "revision": "9bfb6693f2cf6de171db46d1aa586f67d773a1da",
+    "partition": "FL2VA",
+    "manifest": "model-manifest.json",
+    "mirror_id": "MiniMax/MiniMax-H3",
+    "mirror_revision": "57559a6720ddaa2eaee52b09ec2ef011127997b2"
+  },
+  "quantization": "online FP8 for supported DiT and text encoder linears",
+  "check_script": "scripts/check_h3_fl2va.py"
+}
