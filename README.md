@@ -48,6 +48,8 @@ Laya 按每卡一个完整模型副本运行，统一入口默认 `http://127.0.
 
 [LCA-Nemotron-Embed-1B](docs/lca-nemotron.md) 使用固定 Sentence Transformers 参考镜像，每卡一个 GPUStack custom deployment；统一鉴权路由提供显式 query/document、2048 维向量，并通过完整 HTTP/reference 检索基准验收。
 
+[H3 NVFP4 部署准备](docs/h3.md) 固定完整音视频模型组件、ModelScope 镜像和校验流程；GPU 推理与 GPUStack 上线验收尚未完成。
+
 ## 文档与开发
 
 | 文档 | 内容 |

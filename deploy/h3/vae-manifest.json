@@ -1,0 +1,199 @@
+{
+  "model_id": "MiniMaxAI/MiniMax-H3",
+  "revision": "9bfb6693f2cf6de171db46d1aa586f67d773a1da",
+  "selection": {
+    "include": [
+      "Ref2VA/video_vae/",
+      "Ref2VA/audio_vae/"
+    ],
+    "exclude": []
+  },
+  "files": [
+    {
+      "path": "Ref2VA/audio_vae/config.json",
+      "size": 1973,
+      "sha256": null,
+      "git_oid": "bc2a8dc3bfe9037e1f0e82e97f309019b6a398e6"
+    },
+    {
+      "path": "Ref2VA/audio_vae/config.yaml",
+      "size": 91,
+      "sha256": null,
+      "git_oid": "4ad8704ca5bf410fb2f471978fe9537c98ca4aa0"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_activations.py",
+      "size": 2189,
+      "sha256": null,
+      "git_oid": "234a4223d1fc7340f0dc450b7c7e286555c5065d"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_alias_free_act.py",
+      "size": 835,
+      "sha256": null,
+      "git_oid": "d39ca2802eec1bd98e31cb2065c088ac6b57c2b0"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_alias_free_filter.py",
+      "size": 3300,
+      "sha256": null,
+      "git_oid": "ad025952f5ada1c57be051f8e6dc999267b58d36"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_alias_free_resample.py",
+      "size": 1740,
+      "sha256": null,
+      "git_oid": "af4b2b44891ac10d5f4a544a73a0d1a5d3342637"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_attn_proj.py",
+      "size": 3317,
+      "sha256": null,
+      "git_oid": "d3b9b1fcba4e8e2ab4ce323577a1f7321a9f7ab1"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_audio_vae.py",
+      "size": 7266,
+      "sha256": null,
+      "git_oid": "b8b8c8b3ce0f2144b46663ea560bd1904b654925"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_bigvgan.py",
+      "size": 7102,
+      "sha256": null,
+      "git_oid": "00d639800dbe91e91f1cef39f2642848622e47ff"
+    },
+    {
+      "path": "Ref2VA/audio_vae/dac_utils.py",
+      "size": 362,
+      "sha256": null,
+      "git_oid": "b1d30c34fa506c62c338a9bb7e10816e3bbc32cb"
+    },
+    {
+      "path": "Ref2VA/audio_vae/metadata.json",
+      "size": 440,
+      "sha256": null,
+      "git_oid": "db6aa0b9d2022da4b04f1f80fa2a5260231c5c83"
+    },
+    {
+      "path": "Ref2VA/audio_vae/minimax_h3_audio_vae.py",
+      "size": 3532,
+      "sha256": null,
+      "git_oid": "b03f1e5027888da226701e20c097053068e3e310"
+    },
+    {
+      "path": "Ref2VA/audio_vae/model.safetensors",
+      "size": 605429308,
+      "sha256": "37dddc2f3e6d5d5139d823d5ea283bbf304dadcb885b1ccda818aa13dade5ea2",
+      "git_oid": "122a6864b663b50ddc7e48c06cf35fbff1233012"
+    },
+    {
+      "path": "Ref2VA/video_vae/attention.py",
+      "size": 5785,
+      "sha256": null,
+      "git_oid": "0443bd31cefe7bd5022aa7f36fbc6aced9fdd84f"
+    },
+    {
+      "path": "Ref2VA/video_vae/base_module.py",
+      "size": 9520,
+      "sha256": null,
+      "git_oid": "b13137b8d163afea25c235beef1476039d7f6c0e"
+    },
+    {
+      "path": "Ref2VA/video_vae/config.json",
+      "size": 1807,
+      "sha256": null,
+      "git_oid": "20f91e40ea9bc24c21a0e757715f93acf49eb841"
+    },
+    {
+      "path": "Ref2VA/video_vae/conv.py",
+      "size": 4487,
+      "sha256": null,
+      "git_oid": "f10f5002b13bfa46c8eb9a9b4ba8d88bc891a517"
+    },
+    {
+      "path": "Ref2VA/video_vae/flash.py",
+      "size": 5763,
+      "sha256": null,
+      "git_oid": "40b7cac47cabc3755c8c06dc620c689418cb769d"
+    },
+    {
+      "path": "Ref2VA/video_vae/func.py",
+      "size": 5840,
+      "sha256": null,
+      "git_oid": "f142c48a932430b67d77164a6bfba3f61102ac3d"
+    },
+    {
+      "path": "Ref2VA/video_vae/klvae.py",
+      "size": 48594,
+      "sha256": null,
+      "git_oid": "3e66f174c2c82600b6bc924ede9fb3fb068d1f3e"
+    },
+    {
+      "path": "Ref2VA/video_vae/minimax_h3_video_vae.py",
+      "size": 5123,
+      "sha256": null,
+      "git_oid": "231d9c77a7a3dc74de007c29332cfe92e3782f7d"
+    },
+    {
+      "path": "Ref2VA/video_vae/norm.py",
+      "size": 10686,
+      "sha256": null,
+      "git_oid": "00a96b83c6ee3f78cf75873e46d96be5d50879a6"
+    },
+    {
+      "path": "Ref2VA/video_vae/normalize.py",
+      "size": 1200,
+      "sha256": null,
+      "git_oid": "fd4038037c22d9c7b2e375e455e975ef4c56db7b"
+    },
+    {
+      "path": "Ref2VA/video_vae/parallel.py",
+      "size": 12997,
+      "sha256": null,
+      "git_oid": "e63b13c9b20738d4a2835e8fde4504a8145e121f"
+    },
+    {
+      "path": "Ref2VA/video_vae/source/config.json",
+      "size": 1164,
+      "sha256": null,
+      "git_oid": "fb5105116e094aface836f5182b126bb4fbdc699"
+    },
+    {
+      "path": "Ref2VA/video_vae/source/model.safetensors",
+      "size": 10415548320,
+      "sha256": "5f0c2e161d895a9fee7645ca32d4a7e3a22b90cacfcbeba62ec999cdbbefe0d3",
+      "git_oid": "cc1fe048902a2d790834962551620c2c6dbb2b31"
+    },
+    {
+      "path": "Ref2VA/video_vae/utils.py",
+      "size": 764,
+      "sha256": null,
+      "git_oid": "89c13d28758834b1fa8a1cd69018ec00807402f6"
+    },
+    {
+      "path": "Ref2VA/video_vae/vae_cnn.py",
+      "size": 8836,
+      "sha256": null,
+      "git_oid": "40a7917a1144162372f53328753f00e2f4c40a20"
+    },
+    {
+      "path": "Ref2VA/video_vae/vae_module.py",
+      "size": 1884,
+      "sha256": null,
+      "git_oid": "6f2bf8d091c35eba2c4b6e92ee0038c0bfc9f137"
+    },
+    {
+      "path": "Ref2VA/video_vae/vae_processor.py",
+      "size": 8369,
+      "sha256": null,
+      "git_oid": "0f2611987b6b0a0bfde2a3192121eede32dc9d8d"
+    },
+    {
+      "path": "Ref2VA/video_vae/vae_vit.py",
+      "size": 13490,
+      "sha256": null,
+      "git_oid": "9021bcdd1dd2120ef5d0f7e0d0521199dbc1d3f9"
+    }
+  ]
+}

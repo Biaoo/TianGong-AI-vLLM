@@ -1,0 +1,22 @@
+{
+  "status": "preparation; GPU acceptance pending",
+  "upstream_source": "https://github.com/vllm-project/vllm-omni",
+  "upstream_commit": "ee37ec0620a99b3787dab5e5e3bd1f5cdfd0615f",
+  "candidate_runtime_image": "vllm/vllm-omni@sha256:b8a3e3c33c67f7650ef2770dcfdbd6b55da8dcf38b34801931771a603741c78e",
+  "runtime_compatibility": "Must inspect installed versions and H3 source before building or launching",
+  "model": {
+    "id": "FastVideo/FastH3-Omni-NVFP4-QAD",
+    "revision": "f01e6a23ac6066aa9eb622cf94b6259442e70ec2",
+    "manifest": "model-manifest.json",
+    "mirror_id": "FastVideo/FastH3-Omni-NVFP4-QAD",
+    "mirror_revision": "aed5d1f3da2d064a22f19e9d97377473813b9425"
+  },
+  "native_vaes": {
+    "id": "MiniMaxAI/MiniMax-H3",
+    "revision": "9bfb6693f2cf6de171db46d1aa586f67d773a1da",
+    "manifest": "vae-manifest.json",
+    "mirror_id": "MiniMax/MiniMax-H3",
+    "mirror_revision": "57559a6720ddaa2eaee52b09ec2ef011127997b2"
+  },
+  "check_script": "scripts/check_h3.py"
+}
