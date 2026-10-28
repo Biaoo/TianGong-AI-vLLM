@@ -1,0 +1,16 @@
+{
+  "status": "image built and source verified; GPU video validation pending",
+  "upstream_commit": "ee37ec0620a99b3787dab5e5e3bd1f5cdfd0615f",
+  "base_image": "tiangong-h3:ee37ec06-vllm032-r6",
+  "base_image_id": "sha256:7c15800cfc4c259d77218eca5c6283dbbedc90dbe180b25a54524c3ded3dd5a0",
+  "runtime_image": "tiangong-h3-heretic:ee37ec06-fp8-r1",
+  "image_id": "sha256:2a80fa786a174a7dfd78a9d0927801ff50a982bf6b236502be046f07cec816f1",
+  "encoder_repo": "ethanfel/Qwen3-VL-32B-Ultra-Heretic-H3-ComfyUI-INT8-ConvRot",
+  "encoder_revision": "e8967f6a39ea5b4939a1aff81be3e8706490c0e8",
+  "encoder_file": "qwen3vl_32b_h3_ultra_uncensored_heretic_bf16.safetensors",
+  "encoder_sha256": "bbcd92a732e911cfafd86960e0e26aacc6efe949e02f16a9641f201c62984860",
+  "assembly_manifest_sha256": "8d01e4edca0993969cd2991d7eebbc3a9101438f6003162cc265f9b78d18f1bf",
+  "quantization": "Heretic BF16 source, native tensor-name mapping, online FP8 encoder; existing FastH3 NVFP4 QAD DiT",
+  "check_script": "scripts/check_h3.py",
+  "runtime_compatibility": "Inherited vLLM 0.32.0, Torch 2.13.0+cu130 and FlashInfer 0.7.0.post1; no dependency changes"
+}

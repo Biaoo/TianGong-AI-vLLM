@@ -52,6 +52,8 @@ Laya 按每卡一个完整模型副本运行，统一入口默认 `http://127.0.
 
 [H3 首尾帧服务](docs/h3-fl2va.md) 使用独立 FL2VA 模型和 GPUStack 路由，支持首帧、尾帧及首尾帧输入；部署与验收状态见其固定发布清单。
 
+[H3 Heretic 视频服务](docs/h3-heretic.md) 使用 Heretic 编码器与 FastH3 NVFP4 视频模型，提供独立的参考图生成接口。
+
 ## 文档与开发
 
 | 文档 | 内容 |
