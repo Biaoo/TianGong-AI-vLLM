@@ -2,6 +2,8 @@
 
 使用原版 MiniMax H3 的 `FL2VA` 分区，接受首帧、尾帧或同时提供两帧，生成连接画面的同步音视频。它与 [FastH3 NVFP4 Ref2VA](h3.md) 使用独立的 GPUStack backend、deployment 和路由。
 
+已完成单张 SM120 GPU 的首尾帧 5 秒 480P 生成：端到端 188.084 秒，24 FPS、32 kHz 双声道、完整解码通过；抽取首尾帧与输入对照，主体、姿态和场景对应。该样片生成期间三次既有 LCA 请求成功，原模型容器身份与启动时间未改变。
+
 ## 固定运行配置
 
 [release.json](../deploy/h3-fl2va/release.json) 记录源码、模型 revision、镜像摘要和验收状态。配置为单卡、在线 FP8、DiT 与文本编码器逐层卸载、cuDNN attention、50 步、guidance 1、并发 1。视频/音频 VAE 保留原精度。下载文件仍为原版权重，共约 134.16 GiB；磁盘大小不代表推理显存。
@@ -50,6 +52,8 @@ curl --fail --show-error --noproxy '*' --max-time 7200 \
 ```
 
 只给首帧时上传一张图并用 `[0]`；只给尾帧时上传一张图并用 `[-1]`。`seconds` 为 4～15 的整数，`size` 可选 `832x480` 或 `1344x768`。
+
+公网使用独立的 GPUStack 鉴权路由复用相同模型目标；内网路由可继续按既有访问策略运行。外部 key 仅授予 `inference` scope，并将 `allowed_model_names` 限定为 H3 外部路由名称。TLS 网关仅转发精确生成路径和 POST，保留 Bearer 请求头，不公开管理接口或转发到内部免 key 路由。实际域名、key 和 HAProxy 配置由部署环境维护。
 
 ## 生成验收与恢复
 
