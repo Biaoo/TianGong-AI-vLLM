@@ -3,7 +3,7 @@
   "name": "h3-heretic-example",
   "local_path": "/srv/models/h3/heretic-e8967f6a-fastnvfp4-v1",
   "backend": "tiangong-h3-heretic-custom",
-  "backend_version": "ee37ec06-fp8-r1",
+  "backend_version": "ee37ec06-fp8-r2",
   "backend_parameters": [
     "--allowed-clients=127.0.0.1,::1,<gateway-ip>,<worker-ip>",
     "--memory-fraction=0.30",

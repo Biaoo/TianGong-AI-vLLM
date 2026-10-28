@@ -44,7 +44,7 @@
 
 ## 已有模型约束
 
-- H3 Heretic：见 docs/h3-heretic.md。独立 Ref2VA 视频接口，使用固定 Heretic BF16 源权重映射张量名后在线 FP8 编码，复用现有 FastH3 NVFP4 QAD；不直接加载 ComfyUI INT8 ConvRot，不下载文本生成 tail，不加入原版路由池或原生 all。部署文件 deploy/h3-heretic，打包脚本 scripts/prepare_h3_heretic.py，实际生成验收复用 scripts/check_h3.py。发布须固定组装 manifest SHA256，保留原版 A/B 接口。
+- H3 Heretic：见 docs/h3-heretic.md。独立 Ref2VA 视频接口，使用固定 Heretic BF16 源权重映射张量名后在线 FP8 编码，复用现有 FastH3 NVFP4 QAD；不直接加载 ComfyUI INT8 ConvRot，不下载文本生成 tail，不加入原版路由池或原生 all。部署文件 deploy/h3-heretic，打包脚本 scripts/prepare_h3_heretic.py，实际生成验收复用 scripts/check_h3.py。发布须固定组装 manifest SHA256，保留原版 A/B 接口。新镜像的 CPU DiT 初始化补丁先核对固定上游源码 SHA256，保持编码器逐层 GPU 量化；禁止把未量化的整套权重同时搬入共享 GPU。
 
 - H3 FL2VA：首尾帧使用原版 MiniMax H3 的独立 FL2VA 分区及路由，不能用两张 Ref2VA 参考图代替。配置、固定清单和启动器位于 deploy/h3-fl2va；单卡在线 FP8、逐层卸载、50 步，验收脚本 scripts/check_h3_fl2va.py，说明见 docs/h3-fl2va.md。初始副本为 0；release.json 的状态区分构建/本地测试与真实 GPU 生成，不能把预配置当作已上线。不修改原 FastH3 deployment，不加入原生 all。
 

@@ -4,11 +4,11 @@
   "is_built_in": false,
   "enabled": true,
   "health_check_path": "/health",
-  "default_version": "ee37ec06-fp8-r1",
+  "default_version": "ee37ec06-fp8-r2",
   "default_env": {"GPUSTACK_MODEL_RUNTIME_SHM_SIZE_GIB": "16"},
   "version_configs": {
-    "ee37ec06-fp8-r1": {
-      "image_name": "tiangong-h3-heretic:ee37ec06-fp8-r1",
+    "ee37ec06-fp8-r2": {
+      "image_name": "tiangong-h3-heretic:ee37ec06-fp8-r2",
       "custom_framework": "cuda",
       "entrypoint": "python3 /opt/h3-heretic/serve.py",
       "run_command": "--model {{model_path}} --host {{worker_ip}} --port {{port}}"
