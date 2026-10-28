@@ -1,0 +1,29 @@
+{
+  "status": "validated: SM120 GPU, anonymous LAN T2VA and authenticated HTTPS FL2VA, 5s 480P audio/video, full decode and sampled frame review",
+  "upstream_commit": "ee37ec0620a99b3787dab5e5e3bd1f5cdfd0615f",
+  "base_image": "tiangong-h3-fl2va:ee37ec06-fp8-r1",
+  "base_image_id": "sha256:96c018e4a2cd678c0acfa8ee1cc7e400d2aa6af2234adb2bd348697116ff0f28",
+  "runtime_image": "tiangong-h3-heretic-fl2va:ee37ec06-fp8-r1",
+  "image_id": "sha256:80741e0b194a5a6cbfbf83a19ebb78529c4dfe4c2737debe04198e3c9dc46e47",
+  "model_revision": "9bfb6693f2cf6de171db46d1aa586f67d773a1da",
+  "partition": "FL2VA",
+  "tasks": ["fl2va", "t2va"],
+  "encoder_revision": "e8967f6a39ea5b4939a1aff81be3e8706490c0e8",
+  "encoder_sha256": "bbcd92a732e911cfafd86960e0e26aacc6efe949e02f16a9641f201c62984860",
+  "assembly_manifest_sha256": "c937efd79841d8388f716e531b7e8c0fd976643593bf1f4d3d90b6f20fea1238",
+  "quantization": "online FP8 for native H3 DiT and converted Heretic encoder; layer offload; 50 steps",
+  "runtime_compatibility": "Inherited vLLM 0.32.0, Torch 2.13.0+cu130 and FlashInfer 0.7.0.post1; no dependency changes",
+  "check_script": "scripts/check_h3_fl2va.py",
+  "validation": {
+    "t2va_seconds": 168.360,
+    "fl2va_seconds": 168.367,
+    "clip_seconds": 5,
+    "size": "832x480",
+    "frames": 124,
+    "fps": 24,
+    "audio": "32000 Hz stereo",
+    "https_origin": "LAN to public HTTPS; independent external checks used no credentials",
+    "gpu_total_peak_used_mib": 54708,
+    "host_min_available_gib": 436.10
+  }
+}

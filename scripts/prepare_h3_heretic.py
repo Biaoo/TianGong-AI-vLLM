@@ -1,4 +1,4 @@
-"""Package the pinned Heretic BF16 encoder with the existing FastH3 components."""
+"""Package the pinned Heretic encoder with FastH3 or native FL2VA components."""
 
 import argparse
 import hashlib
@@ -163,6 +163,62 @@ def prepare(source, fast, native, output):
     print(json.dumps({"assembled": str(output), "manifest_sha256": sha256(path)}))
 
 
+def prepare_native(existing, expected_hash, native, output, allowed_root):
+    """Reuse a verified converted encoder with the original FL2VA/T2VA partition."""
+    if native.name != "FL2VA" or native.parent.name != BASE_REVISION:
+        raise ValueError("Expected pinned native H3 partition")
+    if output.exists() or output.name != "FL2VA":
+        raise ValueError("Expected a new FL2VA assembly directory")
+    for path in (existing, native, output):
+        if not path.resolve().is_relative_to(allowed_root.resolve()):
+            raise ValueError("Assembly path escapes the model mount")
+    verify(existing, expected_hash, allowed_root)
+    source_manifest = json.loads((existing / "assembly-manifest.json").read_text())
+    native_manifest = json.loads((native.parent / "snapshot-manifest.json").read_text())
+    sources = []
+    for entry in native_manifest["files"]:
+        if not entry["path"].startswith("FL2VA/"):
+            continue
+        name = entry["path"].removeprefix("FL2VA/")
+        if name.startswith("text_encoder/"):
+            continue
+        sources.append((native / name, dict(entry, path=name)))
+    sources.extend(
+        (existing / entry["path"], entry)
+        for entry in source_manifest["files"]
+        if entry["path"].startswith("text_encoder/")
+    )
+    entries = []
+    for path, entry in sources:
+        if not path.resolve().is_relative_to(allowed_root.resolve()):
+            raise ValueError("Assembly file escapes the model mount")
+        check_file(path, entry)
+        entries.append(dict(entry, sha256=entry["sha256"] or sha256(path)))
+    metadata = json.loads((native / "model_index.json").read_text())["_minimax_h3"]
+    if metadata.get("partition") != "fl2va" or not {"fl2va", "t2va"}.issubset(
+        metadata.get("tasks", [])
+    ):
+        raise ValueError("Native partition must support FL2VA and T2VA")
+    output.mkdir(parents=True)
+    for path, entry in sources:
+        target = output / entry["path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.symlink_to(path.resolve())
+    manifest = {
+        "encoder_source_revision": REVISION,
+        "encoder_source_sha256": SOURCE_SHA256,
+        "converted_encoder_manifest_sha256": expected_hash,
+        "base_revision": BASE_REVISION,
+        "partition": "fl2va",
+        "tasks": ["fl2va", "t2va"],
+        "tensor_count": source_manifest["tensor_count"],
+        "files": sorted(entries, key=lambda e: e["path"]),
+    }
+    path = output / "assembly-manifest.json"
+    path.write_text(json.dumps(manifest, indent=2) + "\n")
+    print(json.dumps({"assembled": str(output), "manifest_sha256": sha256(path)}))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path)
@@ -172,11 +228,22 @@ def main():
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--expected-manifest-sha256")
     parser.add_argument("--allowed-root", type=Path)
+    parser.add_argument("--native-assembly-from", type=Path)
     args = parser.parse_args()
     if args.verify_only:
         if not args.expected_manifest_sha256 or not args.allowed_root:
             parser.error("Verification requires the release digest and allowed model mount")
         verify(args.output, args.expected_manifest_sha256, args.allowed_root)
+    elif args.native_assembly_from:
+        if not all((args.native, args.expected_manifest_sha256, args.allowed_root)):
+            parser.error("Native assembly requires native path, existing digest and allowed root")
+        prepare_native(
+            args.native_assembly_from,
+            args.expected_manifest_sha256,
+            args.native,
+            args.output,
+            args.allowed_root,
+        )
     else:
         if not all((args.source, args.fast, args.native)):
             parser.error("Preparation requires source, fast and native paths")

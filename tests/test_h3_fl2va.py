@@ -11,6 +11,11 @@ SPEC = importlib.util.spec_from_file_location(
 )
 runtime = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(runtime)
+CHECK_SPEC = importlib.util.spec_from_file_location(
+    "check_h3_fl2va", Path(__file__).resolve().parents[1] / "scripts/check_h3_fl2va.py"
+)
+check = importlib.util.module_from_spec(CHECK_SPEC)
+CHECK_SPEC.loader.exec_module(check)
 
 
 @pytest.fixture
@@ -97,3 +102,23 @@ def test_request_preserves_endpoint_image_order(indices):
     assert body.endswith(f"--{boundary}--\r\n".encode())
     if len(images) == 2:
         assert body.index(images[0]) < body.index(images[1])
+
+
+def test_text_only_request_has_no_reference_fields():
+    body, _, fields = check.request_body(
+        [], [], task="t2va", prompt="A cat waves", seconds=5, size="832x480", seed=42
+    )
+    assert b"input_reference" not in body
+    assert json.loads(fields["extra_params"]) == {
+        "task": "t2va",
+        "audio_flow_shift": 3.0,
+        "aspect_ratio": "16:9",
+    }
+    assert fields["num_inference_steps"] == "50"
+
+
+def test_rejects_references_in_text_only_request():
+    with pytest.raises(ValueError, match="text only"):
+        check.request_body(
+            [b"image"], [0], task="t2va", prompt="A cat waves", seconds=5, size="832x480", seed=42
+        )

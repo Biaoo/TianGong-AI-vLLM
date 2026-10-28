@@ -88,3 +88,47 @@ def test_verifier_rejects_tampering_and_symlink_escape(tmp_path):
         package.verify(root, digest, root)
     with pytest.raises(ValueError, match="digest"):
         package.verify(root, "0" * 64, tmp_path)
+
+
+def test_native_assembly_replaces_only_encoder_and_keeps_both_tasks(tmp_path):
+    existing = tmp_path / "existing"
+    existing.mkdir()
+    native = tmp_path / package.BASE_REVISION / "FL2VA"
+    native.mkdir(parents=True)
+    encoder = existing / "text_encoder/model.safetensors"
+    encoder.parent.mkdir()
+    encoder.write_bytes(b"converted-heretic")
+    original = native / "text_encoder/original.safetensors"
+    original.parent.mkdir()
+    original.write_bytes(b"original-encoder")
+    index = native / "model_index.json"
+    index.write_text(
+        json.dumps({"_minimax_h3": {"partition": "fl2va", "tasks": ["fl2va", "t2va"]}})
+    )
+
+    def entry(path, root):
+        return {
+            "path": str(path.relative_to(root)),
+            "size": path.stat().st_size,
+            "sha256": package.sha256(path),
+        }
+
+    manifest = existing / "assembly-manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "encoder_source_sha256": package.SOURCE_SHA256,
+                "tensor_count": 902,
+                "files": [entry(encoder, existing)],
+            }
+        )
+    )
+    (native.parent / "snapshot-manifest.json").write_text(
+        json.dumps({"files": [entry(index, native.parent), entry(original, native.parent)]})
+    )
+    output = tmp_path / "new/FL2VA"
+    package.prepare_native(existing, package.sha256(manifest), native, output, tmp_path)
+    assert (output / "text_encoder/model.safetensors").resolve() == encoder
+    assert not (output / "text_encoder/original.safetensors").exists()
+    assert (output / "model_index.json").resolve() == index
+    package.verify(output, package.sha256(output / "assembly-manifest.json"), tmp_path)

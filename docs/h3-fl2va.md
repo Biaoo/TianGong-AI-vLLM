@@ -1,6 +1,6 @@
-# H3 首尾帧音视频服务
+# H3 首尾帧与纯文本音视频服务
 
-使用原版 MiniMax H3 的 `FL2VA` 分区，接受首帧、尾帧或同时提供两帧，生成连接画面的同步音视频。它与 [FastH3 NVFP4 Ref2VA](h3.md) 使用独立的 GPUStack backend、deployment 和路由。
+使用原版 MiniMax H3 的 `FL2VA` 分区，接受首帧、尾帧或同时提供两帧；同一实例也支持不上传图片的 T2VA 纯文本音视频生成。它与 [FastH3 NVFP4 Ref2VA](h3.md) 使用独立的 GPUStack backend、deployment 和路由。[Heretic 版本](h3-heretic.md) 另有相同任务接口。
 
 已完成单张 SM120 GPU 的首尾帧 5 秒 480P 生成：端到端 188.084 秒，24 FPS、32 kHz 双声道、完整解码通过；抽取首尾帧与输入对照，主体、姿态和场景对应。该样片生成期间三次既有 LCA 请求成功，原模型容器身份与启动时间未改变。
 
@@ -55,6 +55,12 @@ curl --fail --show-error --noproxy '*' --max-time 7200 \
 
 公网使用独立的 GPUStack 鉴权路由复用相同模型目标；内网路由可继续按既有访问策略运行。外部 key 仅授予 `inference` scope，并将 `allowed_model_names` 限定为 H3 外部路由名称。TLS 网关仅转发精确生成路径和 POST，保留 Bearer 请求头，不公开管理接口或转发到内部免 key 路由。实际域名、key 和 HAProxy 配置由部署环境维护。
 
+## 纯文本 API
+
+使用相同的 `/v1/videos/sync`，不上传图片或 `frame_indices`，将 `extra_params` 设为 `{"task":"t2va","aspect_ratio":"16:9","audio_flow_shift":3.0}`。`aspect_ratio` 为必填；`size` 不能代替它。保留 `flow_shift=12`、`num_inference_steps=50` 及尺寸、时长、seed 参数。启动配置的 `task-type: fl2va` 选择原生分区，实际请求任务由 `extra_params.task` 指定。
+
+已通过 5 秒 480P 无图片生成，端到端 145.260 秒，24 FPS、32 kHz 双声道，完整解码与抽帧检查通过。
+
 ## 生成验收与恢复
 
 在带 ffmpeg/ffprobe 的固定 H3 镜像中运行：
@@ -67,5 +73,7 @@ python3 scripts/check_h3_fl2va.py \
 ```
 
 脚本验证尺寸、时长、24 FPS、32 kHz 双声道和完整媒体解码，保存请求参数、输入散列、耗时及生成视频首尾帧。人工对比输出首尾帧与输入，再记录视觉检查结论；媒体解码通过不等于首尾约束验收。需要鉴权的路由使用 `--key-stdin`，凭据不进命令或结果文件。
+
+验收纯文本时使用 `--task t2va --prompt '完整画面与动作描述'`，不传 `--first` 或 `--last`。脚本为横屏验收自动设置 `aspect_ratio=16:9`。
 
 生成时采样显存与主机内存，并核对同卡原有模型请求、容器 ID 和启动时间。失败时只将新 FL2VA deployment 设为 0，保留模型和证据；原有 FastH3 路由与副本保持原配置。恢复前核对固定镜像和快照，单副本生成通过后再对外提供路由。

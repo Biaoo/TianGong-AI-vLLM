@@ -1,5 +1,5 @@
 {
-  "status": "validated: single SM120 GPU, FP8 first/last-frame 5s 480P generation, full media decode and endpoint image review",
+  "status": "validated: single SM120 GPU, FP8 FL2VA and text-only T2VA 5s 480P generation, full media decode and sampled image review",
   "upstream_source": "https://github.com/vllm-project/vllm-omni",
   "upstream_commit": "ee37ec0620a99b3787dab5e5e3bd1f5cdfd0615f",
   "base_image": "tiangong-h3:ee37ec06-vllm032-r6",
@@ -16,5 +16,6 @@
     "mirror_revision": "57559a6720ddaa2eaee52b09ec2ef011127997b2"
   },
   "quantization": "online FP8 for supported DiT and text encoder linears",
-  "check_script": "scripts/check_h3_fl2va.py"
+  "check_script": "scripts/check_h3_fl2va.py",
+  "t2va_validation": {"elapsed_seconds": 145.260, "clip_seconds": 5, "size": "832x480", "aspect_ratio": "16:9"}
 }

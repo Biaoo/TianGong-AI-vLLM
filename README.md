@@ -50,9 +50,9 @@ Laya 按每卡一个完整模型副本运行，统一入口默认 `http://127.0.
 
 [H3 NVFP4 音视频服务](docs/h3.md) 固定完整模型组件、ModelScope 镜像与离线运行环境；已通过 GPUStack 单卡 480P/768P 带音频生成验收，使用参考图/视频输入。
 
-[H3 首尾帧服务](docs/h3-fl2va.md) 使用独立 FL2VA 模型和 GPUStack 路由，支持首帧、尾帧及首尾帧输入；部署与验收状态见其固定发布清单。
+[H3 首尾帧与纯文本服务](docs/h3-fl2va.md) 使用原生 FL2VA 分区和独立 GPUStack 路由，支持首帧、尾帧、首尾帧及无需图片的 T2VA。
 
-[H3 Heretic 视频服务](docs/h3-heretic.md) 使用 Heretic 编码器与 FastH3 NVFP4 视频模型，提供独立的参考图生成接口。
+[H3 Heretic 视频服务](docs/h3-heretic.md) 使用 Heretic 编码器，分别提供 FastH3 NVFP4 参考图接口和原生 H3 FP8 首尾帧／纯文本接口。
 
 ## 文档与开发
 

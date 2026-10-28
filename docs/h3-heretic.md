@@ -1,6 +1,6 @@
 # H3 Heretic 视频接口
 
-该版本用 Heretic Qwen3-VL 编码参考图和提示词，后续生成继续使用 FastH3 Omni NVFP4 QAD、8 步采样和 36 层视频解码器。它是独立的 Ref2VA deployment，与原 H3 和 FL2VA 路由并存。
+Heretic Qwen3-VL 用于编码图像和提示词，有两种独立 deployment：FastH3 Omni NVFP4 QAD 的 8 步 Ref2VA 参考图生成，以及原生 H3 FP8 的 50 步 FL2VA 首尾帧／T2VA 纯文本生成。两种服务与各自原版并存，分别使用独立 GPUStack 路由。
 
 ## 模型组成
 
@@ -34,7 +34,31 @@ curl --fail-with-body "$H3_HERETIC_URL/v1/videos/sync" \
   --output heretic.mp4
 ```
 
-首尾帧约束继续使用独立 FL2VA 接口。移除本版本时只停用对应路由和 deployment，保留既有 H3 服务及共享权重。
+移除本版本时只停用对应路由和 deployment，保留既有 H3 服务及共享权重。
+
+## Heretic FL2VA 与 T2VA
+
+`deploy/h3-heretic-fl2va/` 使用固定原版 FL2VA 镜像作为父镜像，继承在线 FP8、逐层卸载、50 步和原生 VAE；替换编码器为同一套已转换 Heretic BF16 源权重。没有下载第二份扩散模型或修改现有 deployment。
+
+准备原生组合：
+
+```bash
+python3 scripts/prepare_h3_heretic.py \
+  --native-assembly-from /srv/models/h3/heretic-e8967f6a-fastnvfp4-v1 \
+  --expected-manifest-sha256 8d01e4edca0993969cd2991d7eebbc3a9101438f6003162cc265f9b78d18f1bf \
+  --native /srv/models/h3/fl2va/9bfb6693f2cf6de171db46d1aa586f67d773a1da/FL2VA \
+  --output /srv/models/h3/heretic-fl2va-e8967f6a-v1/FL2VA \
+  --allowed-root /srv/models/h3
+bash deploy/h3-heretic-fl2va/build.sh
+```
+
+组装脚本核对来源散列、原生分区任务声明和各组件，替换整个 `text_encoder/`，其余组件使用同挂载内链接。输出 manifest digest 必须与 `deploy/h3-heretic-fl2va/release.json` 一致；启动时重新校验后离线加载。
+
+GPUStack 模板为 `deploy/examples/h3-heretic-fl2va-gpustack-{backend,model}.json`。初始副本 0；指定一张已有预算的 GPU，claim 32 GiB、allocator 0.30、SHM 16 GiB，启动一个副本。FL2VA 和 T2VA 共用该实例、并发 1，与 Ref2VA 实例分开。
+
+API 与 [原版首尾帧／纯文本 API](h3-fl2va.md) 一致，仅替换路由 URL。FL2VA 上传 `input_references` 并指定 `frame_indices`；T2VA 不上传图片，使用 `extra_params={"task":"t2va","aspect_ratio":"16:9","audio_flow_shift":3.0}`。两者均保留 `flow_shift=12` 和 `num_inference_steps=50`。生成验收使用 `scripts/check_h3_fl2va.py`，T2VA 加 `--task t2va`。
+
+单张 SM120 GPU 已通过 5 秒 480P T2VA（168.360 秒，内网匿名）和 FL2VA（168.367 秒，内网向公网 HTTPS 带 key 调用）。两个样片均为 124 帧、24 FPS、32 kHz 双声道，完整解码与抽帧检查通过，FL2VA 首尾画面与输入对应。独立外网无凭据测试确认 401/405/404；本机错误 key 为 401、无关模型权限为 403。共卡总显存峰值 54,708 MiB，主机最少可用 436.10 GiB；既有模型容器未重启，三次 LCA 请求成功。
 
 ## 验收
 

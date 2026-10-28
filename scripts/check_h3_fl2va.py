@@ -1,4 +1,4 @@
-"""Generate a native H3 first/last-frame clip and validate its media streams."""
+"""Generate an H3 FL2VA or text-only T2VA clip and validate its media streams."""
 
 import argparse
 from fractions import Fraction
@@ -12,8 +12,12 @@ from urllib.request import ProxyHandler, Request, build_opener
 import uuid
 
 
-def request_body(images, indices, *, prompt, seconds, size, seed):
-    if indices not in ([0], [-1], [0, -1]) or len(images) != len(indices):
+def request_body(images, indices, *, prompt, seconds, size, seed, task="fl2va"):
+    if task not in {"fl2va", "t2va"}:
+        raise ValueError("Expected fl2va or t2va")
+    if task == "t2va" and (images or indices):
+        raise ValueError("T2VA takes text only, without reference images or frame indices")
+    if task == "fl2va" and (indices not in ([0], [-1], [0, -1]) or len(images) != len(indices)):
         raise ValueError("Expected first, last, or ordered first/last inputs")
     boundary = "h3-fl2va-" + uuid.uuid4().hex
     fields = {
@@ -24,7 +28,8 @@ def request_body(images, indices, *, prompt, seconds, size, seed):
         "num_inference_steps": "50",
         "flow_shift": "12",
         "extra_params": json.dumps(
-            {"task": "fl2va", "frame_indices": indices, "audio_flow_shift": 3.0}
+            {"task": task, "audio_flow_shift": 3.0}
+            | ({"frame_indices": indices} if task == "fl2va" else {"aspect_ratio": "16:9"})
         ),
     }
     body = bytearray()
@@ -52,6 +57,7 @@ def main():
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--first", type=Path)
     parser.add_argument("--last", type=Path)
+    parser.add_argument("--task", choices=["fl2va", "t2va"], default="fl2va")
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--key-stdin", action="store_true")
     parser.add_argument("--seconds", type=int, choices=range(4, 16), default=5)
@@ -62,8 +68,10 @@ def main():
         default="The subjects move naturally through the scene with synchronized ambient sound.",
     )
     args = parser.parse_args()
-    if not (args.first or args.last):
+    if args.task == "fl2va" and not (args.first or args.last):
         parser.error("At least one of --first or --last is required")
+    if args.task == "t2va" and (args.first or args.last):
+        parser.error("T2VA must not include --first or --last")
     refs = [(0, args.first), (-1, args.last)]
     refs = [(index, path) for index, path in refs if path is not None]
     images = [path.read_bytes() for _, path in refs]
@@ -74,6 +82,7 @@ def main():
         seconds=args.seconds,
         size=args.size,
         seed=args.seed,
+        task=args.task,
     )
     headers = {"Content-Type": "multipart/form-data; boundary=" + boundary}
     if args.key_stdin:
@@ -141,7 +150,8 @@ def main():
         "reference_sha256": [hashlib.sha256(image).hexdigest() for image in images],
         "media": media,
         "media_decode": "passed",
-        "endpoint_visual_review": "pending",
+        "visual_review": "pending",
+        "endpoint_visual_review": "pending" if args.task == "fl2va" else "not_applicable",
     }
     (args.output_dir / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(
@@ -150,7 +160,8 @@ def main():
                 "video": str(output),
                 "elapsed_seconds": elapsed,
                 "media_decode": "passed",
-                "endpoint_visual_review": "pending",
+                "visual_review": result["visual_review"],
+                "endpoint_visual_review": result["endpoint_visual_review"],
             }
         )
     )

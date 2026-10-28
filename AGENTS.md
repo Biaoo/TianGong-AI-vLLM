@@ -46,7 +46,7 @@
 
 - H3 Heretic：见 docs/h3-heretic.md。独立 Ref2VA 视频接口，使用固定 Heretic BF16 源权重映射张量名后在线 FP8 编码，复用现有 FastH3 NVFP4 QAD；不直接加载 ComfyUI INT8 ConvRot，不下载文本生成 tail，不加入原版路由池或原生 all。部署文件 deploy/h3-heretic，打包脚本 scripts/prepare_h3_heretic.py，实际生成验收复用 scripts/check_h3.py。发布须固定组装 manifest SHA256，保留原版 A/B 接口。新镜像的 CPU DiT 初始化补丁先核对固定上游源码 SHA256，保持编码器逐层 GPU 量化；禁止把未量化的整套权重同时搬入共享 GPU。
 
-- H3 FL2VA：首尾帧使用原版 MiniMax H3 的独立 FL2VA 分区及路由，不能用两张 Ref2VA 参考图代替。配置、固定清单和启动器位于 deploy/h3-fl2va；单卡在线 FP8、逐层卸载、50 步，验收脚本 scripts/check_h3_fl2va.py，说明见 docs/h3-fl2va.md。初始副本为 0；release.json 的状态区分构建/本地测试与真实 GPU 生成，不能把预配置当作已上线。不修改原 FastH3 deployment，不加入原生 all。
+- H3 FL2VA/T2VA：原版 MiniMax H3 的 FL2VA 分区同时支持首尾帧和纯文本任务，不能用两张 Ref2VA 参考图代替首尾约束。原版配置位于 deploy/h3-fl2va，Heretic 编码器版本位于 deploy/h3-heretic-fl2va；独立 deployment 和路由，单卡在线 FP8、逐层卸载、50 步，不加入原 FastH3 池或原生 all。Heretic 原生组合通过 scripts/prepare_h3_heretic.py --native-assembly-from 复用已验证编码器与原生组件，固定 manifest SHA256。验收脚本 scripts/check_h3_fl2va.py 支持 --task fl2va/t2va；T2VA 无图片，必须显式 aspect_ratio，size 不能替代它。说明见 docs/h3-fl2va.md 和 docs/h3-heretic.md。初始副本为 0；release 状态区分构建与真实生成。
 
 - H3 NVFP4：见 docs/h3.md；固定 FastH3 Omni NVFP4 QAD 和原版视频/音频 VAE 清单，ModelScope 镜像仍按原 HF 散列验证。已通过 SM120 单卡、GPUStack 鉴权路由的 5 秒 480P/768P 音视频验收；默认 36 层解码器、逐层卸载、运行并发 1。快速解码器、长视频与压力测试尚未验收。专用脚本与固定依赖镜像位于 scripts/download_hf_snapshot.py、scripts/check_h3.py、deploy/h3，GPUStack 模板位于 deploy/examples/h3-gpustack-*.json，不加入原生 all；不能把 Ref2VA 描述成无需参考的纯文生视频。
 
